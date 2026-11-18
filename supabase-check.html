@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEXORA WALLET — Supabase Connection Check</title>
+<style>
+:root{color-scheme:dark;--bg:#080d18;--card:#172235;--green:#00e89d;--muted:#94a3b8;--red:#ff5263}
+*{box-sizing:border-box;font-family:Segoe UI,system-ui,sans-serif}
+body{margin:0;min-height:100vh;background:var(--bg);color:#f8fafc;display:grid;place-items:center;padding:20px}
+main{width:100%;max-width:440px;background:var(--card);border:1px solid #ffffff18;border-radius:20px;padding:24px}
+h1{font-size:22px;margin:0 0 8px}p{color:var(--muted);line-height:1.5;font-size:14px}
+label{display:block;font-size:12px;color:var(--muted);margin:14px 0 6px}
+input{width:100%;padding:13px;border-radius:10px;border:1px solid #ffffff25;background:#ffffff0c;color:white;font-size:15px}
+button{width:100%;padding:13px;border:0;border-radius:10px;background:var(--green);color:#04101c;font-weight:700;font-size:15px;margin-top:14px;cursor:pointer}
+button.secondary{background:#ffffff12;color:white;border:1px solid #ffffff25}
+#status{margin-top:18px;padding:13px;border-radius:10px;background:#0003;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}
+.good{color:var(--green)}.bad{color:var(--red)}
+.note{font-size:12px;margin-top:18px}
+</style>
+</head>
+<body>
+<main>
+<h1>⚡ NEXORA WALLET</h1>
+<p>Supabase Authentication connection check. This page does not move funds or change wallet balances.</p>
+<label for="email">Admin email</label>
+<input id="email" type="email" autocomplete="username" value="xianglong@gmail.com">
+<label for="password">Password</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="Enter your Supabase account password">
+<button id="login">Test login</button>
+<button id="logout" class="secondary" hidden>Sign out</button>
+<div id="status" role="status">Checking connection…</div>
+<p class="note">Only the public publishable key is used here. Never enter or share a Supabase secret key on this page.</p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var statusEl=document.getElementById('status');
+  var loginBtn=document.getElementById('login');
+  var logoutBtn=document.getElementById('logout');
+  var client=null;
+  function show(message,good){
+    statusEl.textContent=message;
+    statusEl.className=good===true?'good':good===false?'bad':'';
+  }
+  if(!window.supabase||!window.supabase.createClient){
+    show('Could not load the Supabase library. Refresh this page and try again.',false);
+    return;
+  }
+  client=window.supabase.createClient(
+    'https://enfmybsgkhonjprlgusk.supabase.co',
+    'sb_publishable_myD1MDYUobf3w-nph3hbow_5tIsNJk3'
+  );
+  show('Supabase client initialized. Enter your admin password and select Test login.',true);
+  loginBtn.addEventListener('click',async function(){
+    var email=document.getElementById('email').value.trim().toLowerCase();
+    var password=document.getElementById('password').value;
+    if(!email||!password){show('Enter your email and password.',false);return;}
+    loginBtn.disabled=true;
+    show('Signing in securely…');
+    try{
+      var result=await client.auth.signInWithPassword({email:email,password:password});
+      if(result.error) throw result.error;
+      var user=result.data.user;
+      if(!user) throw new Error('No user was returned.');
+      document.getElementById('password').value='';
+      logoutBtn.hidden=false;
+      show('SUCCESS — Supabase Authentication is connected.\nSigned in as: '+(user.email||email)+'\nUser ID: '+user.id+'\n\nThis confirms login only. Wallet transactions are not connected yet.',true);
+    }catch(error){
+      show('Login failed: '+(error&&error.message?error.message:'Unknown error'),false);
+    }finally{loginBtn.disabled=false;}
+  });
+  logoutBtn.addEventListener('click',async function(){
+    logoutBtn.disabled=true;
+    var result=await client.auth.signOut();
+    logoutBtn.disabled=false;
+    if(result.error){show('Sign out error: '+result.error.message,false);return;}
+    logoutBtn.hidden=true;
+    show('Signed out. Supabase connection is available.',true);
+  });
+  client.auth.getSession().then(function(result){
+    if(result.error){show('Connection check error: '+result.error.message,false);return;}
+    var session=result.data.session;
+    if(session&&session.user){
+      logoutBtn.hidden=false;
+      show('An existing Supabase session is active for: '+(session.user.email||'your account')+'\nSelect Sign out before testing another account.',true);
+    }
+  });
+})();
+</script>
+</body>
+</html>
