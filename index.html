@@ -175,11 +175,11 @@ html[data-theme="dark"] #nexoraThemeToggle.theme-switch button[aria-pressed="tru
 html[data-theme="dark"] #walletThemeSwitch.theme-switch button[aria-pressed="true"]{background:#34405d;color:#fff}
 @media(max-width:390px){#walletThemeSwitch.theme-switch{top:8px;right:8px}#walletThemeSwitch.theme-switch button{min-width:82px;padding:0 8px;font-size:10px}}
 
-/* NEXORA live announcement: static text, 10 seconds visible then 10 seconds blank */
-.marq{display:block!important;position:relative;width:auto;max-width:100%;height:38px;min-height:38px;overflow:hidden;white-space:nowrap;contain:paint;isolation:isolate;visibility:visible!important;opacity:1!important}
-.marq span{display:inline-block!important;position:relative!important;left:auto!important;top:auto!important;visibility:visible;width:max-content;max-width:100%;white-space:nowrap;transform:none!important;animation:nexoraTickerPause 20s steps(1,end) infinite!important;font-size:13px;line-height:22px}
-@keyframes nexoraTickerPause{0%,49.99%{opacity:1}50%,100%{opacity:0}}
-@media(prefers-reduced-motion:reduce){.marq span{animation:none!important;opacity:1!important;transform:none!important;white-space:normal;max-width:100%}.marq{height:auto;min-height:38px}}
+/* NEXORA announcement: fixed full-width text, 10s visible / 10s blank, no movement */
+#app .marq{display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;position:relative!important;width:calc(100% - 28px)!important;max-width:100%!important;height:38px!important;min-height:38px!important;margin:10px 14px!important;padding:0 12px!important;overflow:hidden!important;white-space:nowrap!important;border-radius:10px!important;contain:layout paint!important;visibility:visible!important;opacity:1!important}
+#app .marq span{display:block!important;position:static!important;left:auto!important;top:auto!important;box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;overflow:hidden!important;text-overflow:ellipsis!important;text-align:center!important;white-space:nowrap!important;line-height:22px!important;font-size:13px!important;transform:none!important;will-change:opacity!important;animation:nexoraAnnouncementPulse 20s linear infinite!important}
+@keyframes nexoraAnnouncementPulse{0%,49.99%{opacity:1}50%,99.99%{opacity:0}100%{opacity:1}}
+
 </style>
 </head>
 <body>
