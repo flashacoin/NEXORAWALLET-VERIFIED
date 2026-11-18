@@ -33,6 +33,26 @@ input,select,textarea{background:var(--panel2);color:var(--text);border:1px soli
 .empty{color:var(--muted)}.notice{background:color-mix(in srgb,var(--amber) 12%,var(--panel));border-color:color-mix(in srgb,var(--amber) 35%,var(--line));color:var(--amber)}
 .theme-switch{border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:var(--panel2);color:var(--text);box-shadow:0 4px 14px #34406a22;cursor:pointer;font-weight:700;font-size:12px}
 @media(max-width:900px){.topright{gap:7px}.theme-switch{padding:7px 9px}}
+
+/* NEXORA 2026 premium fintech admin design system */
+:root{color-scheme:light;--bg:#f5f7fc;--panel:#fff;--panel2:#f3f5fa;--line:#e7eaf2;--muted:#75819a;--text:#17233b;--green:#176f58;--blue:#4566d8;--red:#d94f68;--amber:#a66b13;--shadow:0 8px 28px rgba(25,42,78,.055)}
+html[data-theme="dark"]{color-scheme:dark;--bg:#101521;--panel:#1b2637;--panel2:#222e40;--line:#2b374b;--muted:#a0aec2;--text:#f0f4fc;--green:#55d6a5;--blue:#83a5ff;--red:#ff8195;--amber:#ffd17a;--shadow:0 8px 28px rgba(0,0,0,.18)}
+body{background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:-.01em}
+.side,.top{background:var(--panel);border-color:var(--line)}
+.card,.admin,.chatlist,.chatbox{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:15px}
+.nav button{color:var(--muted);border-radius:10px}.nav button:hover,.nav button.active{background:color-mix(in srgb,var(--blue) 9%,var(--panel));color:var(--text)}.nav button.active{box-shadow:inset 3px 0 var(--blue)}
+.navlabel,.crumb,.sub,.metric,.muted,.sidefoot{color:var(--muted)}
+.btn{background:var(--panel2);color:var(--text);border-color:var(--line);box-shadow:none;border-radius:10px}.btn.primary{background:linear-gradient(110deg,#5c55c9,#397ed5);color:#fff;border:0}
+.tag{background:color-mix(in srgb,var(--green) 10%,var(--panel));border-color:color-mix(in srgb,var(--green) 28%,var(--line));color:var(--green)}
+.avatar{background:linear-gradient(145deg,#7367cf,#4b8edb);color:#fff;box-shadow:0 5px 12px rgba(76,91,180,.18)}
+.ico{display:inline-grid;place-items:center;width:25px;height:25px;border-radius:8px;background:color-mix(in srgb,var(--blue) 10%,var(--panel));color:var(--blue);font-size:14px}
+input,select,textarea{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px}
+.notice{background:color-mix(in srgb,var(--amber) 10%,var(--panel));border-color:color-mix(in srgb,var(--amber) 28%,var(--line));color:var(--amber)}
+.theme-switch{display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);box-shadow:none}
+.theme-switch button{border:0;background:transparent;color:var(--muted);font:600 11px Inter,system-ui,sans-serif;padding:7px 10px;border-radius:999px;cursor:pointer}
+.theme-switch button[aria-pressed="true"]{background:#e9eaff;color:#5148b5;box-shadow:0 1px 4px rgba(46,56,120,.12)}
+html[data-theme="dark"] .theme-switch button[aria-pressed="true"]{background:#34405d;color:#f4f6ff}
+@media(max-width:900px){.topright{gap:7px}.theme-switch button{padding:6px 8px}}
 </style>
 </head>
 <body>
@@ -102,5 +122,5 @@ document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',(
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
 document.getElementById('menuBtn').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
 </script>
-<script id="NEXORA_ADMIN_THEME_SCRIPT">(function(){const key='nexora_theme';function apply(m){document.documentElement.setAttribute('data-theme',m);const b=document.getElementById('adminThemeToggle');if(b)b.textContent=m==='dark'?'☀ Day mode':'☾ Dark mode'}const saved=localStorage.getItem(key)||'light';apply(saved);const b=document.createElement('button');b.id='adminThemeToggle';b.className='theme-switch';b.type='button';b.onclick=()=>{const n=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';localStorage.setItem(key,n);apply(n)};document.querySelector('.topright').appendChild(b);apply(saved)})();</script>
+<script id="NEXORA_ADMIN_THEME_SCRIPT">(function(){const key='nexora_theme';function apply(m){m=m==='dark'?'dark':'light';document.documentElement.setAttribute('data-theme',m);const g=document.getElementById('adminThemeToggle');if(g)g.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===m)))}const saved=localStorage.getItem(key)||'light';apply(saved);const g=document.createElement('div');g.id='adminThemeToggle';g.className='theme-switch';g.setAttribute('role','group');g.setAttribute('aria-label','Choose appearance');g.innerHTML='<button type="button" data-mode="light" aria-pressed="false">☀ Day</button><button type="button" data-mode="dark" aria-pressed="false">☾ Dark</button>';g.addEventListener('click',e=>{const b=e.target.closest('button[data-mode]');if(!b)return;localStorage.setItem(key,b.dataset.mode);apply(b.dataset.mode)});document.querySelector('.topright').appendChild(g);apply(saved);window.addEventListener('storage',e=>{if(e.key===key&&e.newValue)apply(e.newValue)})})();</script>
 </body></html>
