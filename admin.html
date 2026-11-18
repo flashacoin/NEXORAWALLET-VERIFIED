@@ -53,6 +53,12 @@ input,select,textarea{background:var(--panel2);color:var(--text);border:1px soli
 .theme-switch button[aria-pressed="true"]{background:#e9eaff;color:#5148b5;box-shadow:0 1px 4px rgba(46,56,120,.12)}
 html[data-theme="dark"] .theme-switch button[aria-pressed="true"]{background:#34405d;color:#f4f6ff}
 @media(max-width:900px){.topright{gap:7px}.theme-switch button{padding:6px 8px}}
+
+/* Theme selector layout fix: single segmented control, no duplicate labels */
+#adminThemeToggle.theme-switch{display:inline-flex!important;flex-direction:row;align-items:center;justify-content:center;gap:3px;width:max-content;max-width:100%;height:auto;min-height:34px;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--panel);white-space:nowrap;overflow:visible}
+#adminThemeToggle.theme-switch button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:94px;height:27px;padding:0 10px;margin:0;border:0;border-radius:999px;background:transparent;color:var(--muted);font:600 11px/1 Inter,system-ui,sans-serif;white-space:nowrap;cursor:pointer}
+#adminThemeToggle.theme-switch button[aria-pressed="true"]{background:#e9eaff;color:#5148b5;box-shadow:0 1px 4px rgba(46,56,120,.12)}
+html[data-theme="dark"] #adminThemeToggle.theme-switch button[aria-pressed="true"]{background:#34405d;color:#fff}
 </style>
 </head>
 <body>
@@ -122,5 +128,5 @@ document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',(
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
 document.getElementById('menuBtn').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
 </script>
-<script id="NEXORA_ADMIN_THEME_SCRIPT">(function(){const key='nexora_theme';function apply(m){m=m==='dark'?'dark':'light';document.documentElement.setAttribute('data-theme',m);const g=document.getElementById('adminThemeToggle');if(g)g.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===m)))}const saved=localStorage.getItem(key)||'light';apply(saved);const g=document.createElement('div');g.id='adminThemeToggle';g.className='theme-switch';g.setAttribute('role','group');g.setAttribute('aria-label','Choose appearance');g.innerHTML='<button type="button" data-mode="light" aria-pressed="false">☀ Day</button><button type="button" data-mode="dark" aria-pressed="false">☾ Dark</button>';g.addEventListener('click',e=>{const b=e.target.closest('button[data-mode]');if(!b)return;localStorage.setItem(key,b.dataset.mode);apply(b.dataset.mode)});document.querySelector('.topright').appendChild(g);apply(saved);window.addEventListener('storage',e=>{if(e.key===key&&e.newValue)apply(e.newValue)})})();</script>
+<script id="NEXORA_ADMIN_THEME_SCRIPT">(function(){const key='nexora_theme';function apply(m){m=m==='dark'?'dark':'light';document.documentElement.setAttribute('data-theme',m);const g=document.getElementById('adminThemeToggle');if(g)g.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===m)))}const saved=localStorage.getItem(key)||'light';const old=document.getElementById('adminThemeToggle');if(old)old.remove();const g=document.createElement('div');g.id='adminThemeToggle';g.className='theme-switch';g.setAttribute('role','group');g.setAttribute('aria-label','Choose Day mode or Night mode');g.innerHTML='<button type="button" data-mode="light" aria-pressed="false">☀ Day mode</button><button type="button" data-mode="dark" aria-pressed="false">☾ Night mode</button>';g.addEventListener('click',e=>{const b=e.target.closest('button[data-mode]');if(!b)return;localStorage.setItem(key,b.dataset.mode);apply(b.dataset.mode)});document.querySelector('.topright').appendChild(g);apply(saved);window.addEventListener('storage',e=>{if(e.key===key&&e.newValue)apply(e.newValue)})})();</script>
 </body></html>
