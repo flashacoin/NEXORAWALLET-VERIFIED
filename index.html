@@ -323,13 +323,13 @@ html:not([data-theme="dark"]) .nav .ic{filter:none;text-shadow:none}
  html:not([data-theme="dark"]) .screen{animation:none}
 }
 
-/* Compact persistent language picker */
-#nexoraLanguageControl{position:fixed;z-index:10009;top:48px;right:10px;display:flex;align-items:center;gap:4px;height:27px;padding:2px 7px;border:1px solid rgba(130,140,170,.22);border-radius:999px;background:rgba(255,255,255,.88);box-shadow:0 2px 8px rgba(20,25,45,.08);backdrop-filter:blur(9px);opacity:.88}
-#nexoraLanguageControl span{font-size:12px}
-#nexoraLanguageControl select{width:76px;max-width:76px;height:21px;padding:0 2px;border:0!important;outline:0;background:transparent!important;color:#454b63!important;font-size:10px!important;font-weight:650;box-shadow:none!important;cursor:pointer}
-html[data-theme="dark"] #nexoraLanguageControl{background:rgba(24,31,45,.92);border-color:#3a455a}
-html[data-theme="dark"] #nexoraLanguageControl select{color:#e8edf8!important}
-@media(max-width:390px){#nexoraLanguageControl{top:43px;right:8px;height:25px}#nexoraLanguageControl select{width:70px;max-width:70px}}
+/* Inline language picker: sits in its own row, never floats over dashboard content */
+#nexoraLanguageControl{position:relative;z-index:4;display:flex;align-items:center;justify-content:flex-end;gap:8px;width:calc(100% - 28px);max-width:452px;min-height:38px;margin:8px auto 5px;padding:4px 10px;border:1px solid rgba(130,140,170,.20);border-radius:13px;background:rgba(255,255,255,.76);box-shadow:0 3px 12px rgba(35,38,75,.045);backdrop-filter:blur(10px)}
+#nexoraLanguageControl .nx-lang-label{font-size:11px;font-weight:650;color:#7b8298;letter-spacing:.15px}
+#nexoraLanguageControl select{width:auto;min-width:112px;max-width:180px;height:28px;padding:0 24px 0 9px;border:1px solid #e5e6ef!important;border-radius:9px;outline:0;background:#fff!important;color:#424860!important;font-size:11px!important;font-weight:650;box-shadow:none!important;cursor:pointer}
+html[data-theme="dark"] #nexoraLanguageControl{background:rgba(24,31,45,.78);border-color:#3a455a}
+html[data-theme="dark"] #nexoraLanguageControl .nx-lang-label{color:#aab4c8}
+html[data-theme="dark"] #nexoraLanguageControl select{background:#202b40!important;border-color:#3a455a!important;color:#e8edf8!important}
 </style>
 </head>
 <body>
@@ -442,7 +442,7 @@ ar:{'Global crypto wallet & digital asset platform':'محفظة عملات رق�
 };
 function nxLang(){return localStorage.getItem('nexora_language')||'en'}
 function nxTranslate(html){var d=NX_TX[nxLang()];if(!d)return html;Object.keys(d).sort(function(a,b){return b.length-a.length}).forEach(function(k){html=html.split('>'+k+'<').join('>'+d[k]+'<').split('>'+k+' ').join('>'+d[k]+' ')});return html}
-function nxLanguageControl(){var old=document.getElementById('nexoraLanguageControl');if(old)return;var w=document.createElement('div');w.id='nexoraLanguageControl';w.innerHTML='<span aria-hidden="true">🌐</span><select id="nexoraLanguageSelect" aria-label="Choose language" title="Choose language">'+NX_LANGS.map(function(x){return '<option value="'+x[0]+'">'+x[1]+'</option>'}).join('')+'</select>';document.body.appendChild(w);var sel=w.querySelector('select');sel.value=nxLang();sel.addEventListener('change',function(){localStorage.setItem('nexora_language',sel.value);document.documentElement.lang=sel.value;render()})}
+function nxLanguageControl(){var app=document.getElementById('app');if(!app)return;var old=document.getElementById('nexoraLanguageControl');if(old&&old.parentNode!==app)old.remove();if(!old){old=document.createElement('div');old.id='nexoraLanguageControl';old.innerHTML='<span class="nx-lang-label">🌐 Language</span><select id="nexoraLanguageSelect" aria-label="Choose language" title="Choose language">'+NX_LANGS.map(function(x){return '<option value="'+x[0]+'">'+x[1]+'</option>'}).join('')+'</select>';}app.insertBefore(old,app.firstChild);var sel=old.querySelector('select');sel.value=nxLang();if(!sel.dataset.bound){sel.dataset.bound='1';sel.addEventListener('change',function(){localStorage.setItem('nexora_language',sel.value);document.documentElement.lang=sel.value;render()})}}
 function render(){var needAuth=ROUTE!=='login'&&ROUTE!=='signup'&&ROUTE!=='forgot'&&ROUTE!=='recover'&&ROUTE!=='twofa';if(needAuth&&!me()){ROUTE='login';$('app').innerHTML=nxTranslate(scr_login());ensureWalletThemeButton();nxLanguageControl();return}if(ME){ME.refs=ME.refs||0;ME.refEarn=ME.refEarn||0}$('app').innerHTML=nxTranslate(scr());ensureWalletThemeButton();nxLanguageControl()}
 function scr(){if(ROUTE==='login')return scr_login();if(ROUTE==='signup')return scr_signup();if(ROUTE==='forgot')return scr_forgot();if(ROUTE==='recover')return scr_recover();if(ROUTE==='twofa')return scr_twofa();if(ROUTE==='home')return scr_home();if(ROUTE==='notifs')return scr_notifs();if(ROUTE==='markets')return scr_markets();if(ROUTE==='asset')return scr_asset();if(ROUTE==='trade')return scr_trade();if(ROUTE==='wallet')return scr_wallet();if(ROUTE==='profile')return scr_profile();if(ROUTE==='security')return scr_security();if(ROUTE==='rewards')return scr_rewards();if(ROUTE==='referral')return scr_referral();if(ROUTE==='chat')return scr_chat();if(ROUTE==='support')return scr_support();if(ROUTE==='ticket')return scr_ticket();if(ROUTE==='vip')return scr_vip();return scr_home()}
 function boot(){cfg=load('cfg',DEF);render();fetch('fw_admin.json').then(function(r){return r.json()}).then(function(d){cfg=d.cfg||cfg;window.FW_HOOK=d.hook||'';save('cfg',cfg);render()}).catch(function(){})}
