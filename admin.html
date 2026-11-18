@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEXORA WALLET — Admin Control Center</title>
+<style>
+:root{color-scheme:dark;--bg:#080d16;--panel:#101a29;--panel2:#152236;--line:#24334a;--muted:#91a2b9;--text:#edf4ff;--green:#19d49a;--blue:#58a6ff;--red:#ff7185;--amber:#f4bd58}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px Inter,system-ui,-apple-system,Segoe UI,sans-serif}button,input,select,textarea{font:inherit}.app{min-height:100vh;display:grid;grid-template-columns:250px 1fr}.side{background:#0c1421;border-right:1px solid var(--line);padding:22px 15px;display:flex;flex-direction:column;gap:24px}.brand{padding:4px 10px}.brand b{font-size:19px;letter-spacing:1.5px}.brand span{display:block;color:var(--muted);font-size:11px;margin-top:5px}.admin{display:flex;align-items:center;gap:10px;padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px}.avatar{width:36px;height:36px;border-radius:11px;background:#123b35;color:var(--green);display:grid;place-items:center;font-weight:800}.admin small{display:block;color:var(--muted);margin-top:3px}.navlabel{color:#70829a;font-size:10px;font-weight:800;letter-spacing:1.3px;padding:0 11px;margin:8px 0}.nav{display:grid;gap:5px}.nav button{border:0;background:transparent;color:#aebbd0;text-align:left;padding:11px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:11px}.nav button:hover,.nav button.active{background:#14283a;color:#fff}.nav button.active{box-shadow:inset 3px 0 var(--green)}.ico{width:19px;text-align:center;color:var(--green)}.sidefoot{margin-top:auto;color:#71829a;font-size:11px;padding:10px}.main{min-width:0}.top{height:70px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px;background:#0b1320}.crumb{color:var(--muted)}.topright{display:flex;align-items:center;gap:12px}.tag{border:1px solid #185b49;background:#102b27;color:#6ce5ba;padding:6px 10px;border-radius:20px;font-size:11px}.content{padding:28px;max-width:1500px;margin:auto}.heading{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:23px}.heading h1{font-size:25px;margin:0 0 7px}.sub{color:var(--muted)}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px 14px;border-radius:9px;cursor:pointer}.btn.primary{background:var(--green);color:#062018;border-color:var(--green);font-weight:800}.btn:focus,input:focus,select:focus,textarea:focus{outline:2px solid #269f80;outline-offset:1px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:17px}.metric{color:var(--muted);font-size:12px}.metric strong{display:block;color:var(--text);font-size:25px;margin:12px 0 5px}.metric em{font-style:normal;color:#71839b;font-size:11px}.section{margin-top:22px}.sectionhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.sectionhead h2{font-size:15px;margin:0}.tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:600px}.table th,.table td{text-align:left;padding:13px 12px;border-bottom:1px solid var(--line);font-size:12px}.table th{color:#8294ad;font-weight:600}.table td{color:#dce6f4}.muted{color:var(--muted)!important}.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#283348;color:#b9c8dc;font-size:10px}.pill.green{background:#103a30;color:#69e2b6}.pill.amber{background:#44351c;color:#ffd17a}.pill.red{background:#431f2b;color:#ff9aaa}.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.quick .card{cursor:pointer}.quick .card:hover{border-color:#287b68}.quick b{display:block;margin:8px 0 5px}.quick span{color:var(--muted);font-size:11px}.page{display:none}.page.active{display:block}.search{background:#0c1522;border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--text);min-width:220px}.toolbar{display:flex;gap:9px;flex-wrap:wrap}.empty{padding:35px;text-align:center;color:var(--muted)}.chatlayout{display:grid;grid-template-columns:260px 1fr;gap:14px;min-height:430px}.chatlist,.chatbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px}.chatplaceholder{height:330px;display:grid;place-items:center;text-align:center;color:var(--muted)}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:7px}.field input,.field select,.field textarea{width:100%;padding:11px;background:#0b1421;border:1px solid var(--line);border-radius:8px;color:var(--text)}.notice{border:1px solid #665126;background:#2a2417;color:#f4d38f;border-radius:10px;padding:13px;line-height:1.5;margin-top:18px;font-size:12px}.mobilemenu{display:none}
+@media(max-width:900px){.app{grid-template-columns:1fr}.side{display:none}.side.open{display:flex;position:fixed;z-index:5;inset:0 auto 0 0;width:270px;box-shadow:20px 0 60px #0009}.mobilemenu{display:inline-block}.top{padding:0 16px}.content{padding:20px 15px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.quick{grid-template-columns:1fr}.chatlayout{grid-template-columns:1fr}.chatlist{min-height:100px}.formgrid{grid-template-columns:1fr}}
+@media(max-width:430px){.grid{grid-template-columns:1fr 1fr}.metric strong{font-size:20px}.heading h1{font-size:21px}.search{min-width:150px;width:100%}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side" id="sidebar">
+ <div class="brand"><b>✦ NEXORA WALLET</b><span>ADMIN CONTROL CENTER</span></div>
+ <div class="admin"><div class="avatar">A</div><div><b>Administrator</b><small>Admin access · Preview</small></div></div>
+ <div><div class="navlabel">OVERVIEW</div><nav class="nav">
+ <button class="active" data-page="dashboard"><span class="ico">▦</span>Dashboard</button>
+ </nav></div>
+ <div><div class="navlabel">MANAGEMENT</div><nav class="nav">
+ <button data-page="users"><span class="ico">♙</span>User management</button>
+ <button data-page="wallets"><span class="ico">▣</span>Wallet management</button>
+ <button data-page="deposits"><span class="ico">↓</span>Deposit requests</button>
+ <button data-page="withdrawals"><span class="ico">↑</span>Withdrawal requests</button>
+ <button data-page="packages"><span class="ico">◇</span>Trading packages</button>
+ </nav></div>
+ <div><div class="navlabel">COMMUNICATION</div><nav class="nav">
+ <button data-page="support"><span class="ico">☏</span>Support chat</button>
+ <button data-page="announcements"><span class="ico">◉</span>Announcements</button>
+ </nav></div>
+ <div><div class="navlabel">SYSTEM</div><nav class="nav">
+ <button data-page="settings"><span class="ico">⚙</span>Platform settings</button>
+ <button data-page="reports"><span class="ico">▤</span>Reports & audit logs</button>
+ </nav></div>
+ <div class="sidefoot">Secure administration · Preview build<br>Financial actions are not connected.</div>
+</aside>
+<main class="main">
+ <header class="top"><div><button class="btn mobilemenu" id="menuBtn">☰</button> <span class="crumb">NEXORA / <b id="crumb">Dashboard</b></span></div><div class="topright"><span class="tag">● ADMIN PREVIEW</span></div></header>
+ <div class="content">
+ <section class="page active" id="dashboard">
+  <div class="heading"><div><h1>Dashboard overview</h1><div class="sub">Your platform at a glance. Live figures will appear after secure database integration.</div></div><button class="btn" onclick="alert('This preview is not connected to live platform data yet.')">↻ Refresh</button></div>
+  <div class="grid">
+   <div class="card metric">Total registered users<strong>—</strong><em>Awaiting database connection</em></div>
+   <div class="card metric">Total wallet balance<strong>— USDT</strong><em>Awaiting database connection</em></div>
+   <div class="card metric">Pending deposits<strong>—</strong><em>Awaiting database connection</em></div>
+   <div class="card metric">Pending withdrawals<strong>—</strong><em>Awaiting database connection</em></div>
+  </div>
+  <div class="section"><div class="sectionhead"><h2>Management shortcuts</h2></div><div class="quick">
+   <div class="card" data-go="users">♙<b>Manage users</b><span>Search accounts and review user status</span></div>
+   <div class="card" data-go="deposits">↓<b>Review deposits</b><span>Inspect submitted deposit requests</span></div>
+   <div class="card" data-go="withdrawals">↑<b>Review withdrawals</b><span>Review withdrawal requests</span></div>
+   <div class="card" data-go="support">☏<b>Customer support</b><span>Open the support inbox</span></div>
+   <div class="card" data-go="packages">◇<b>Packages</b><span>Configure package information</span></div>
+   <div class="card" data-go="settings">⚙<b>Platform settings</b><span>Deposit address and platform controls</span></div>
+  </div></div>
+  <div class="notice">Preview only: no real user records, balances, deposits, withdrawals or messages are loaded here. We will connect these sections to Supabase with server-side permission checks before enabling actions.</div>
+ </section>
+ <section class="page" id="users"><div class="heading"><div><h1>User management</h1><div class="sub">Find accounts and review account details.</div></div></div><div class="card"><div class="toolbar"><input class="search" placeholder="Search by email, name or Telegram ID" disabled><button class="btn" disabled>Search</button></div><div class="empty">User records will appear here after database integration.</div></div></section>
+ <section class="page" id="wallets"><div class="heading"><div><h1>Wallet management</h1><div class="sub">Review wallet records and authorized adjustments.</div></div></div><div class="card"><div class="empty">Wallet records and balance history will appear here after secure backend integration.</div></div><div class="notice">Every balance adjustment will require a reason, administrator identity and immutable audit record. No balance editing is enabled in this preview.</div></section>
+ <section class="page" id="deposits"><div class="heading"><div><h1>Deposit requests</h1><div class="sub">Review transaction details and payment evidence.</div></div></div><div class="card"><div class="empty">No live deposit requests loaded. Approval controls will be enabled after transaction verification is implemented.</div></div></section>
+ <section class="page" id="withdrawals"><div class="heading"><div><h1>Withdrawal requests</h1><div class="sub">Review, approve, reject or hold withdrawal requests.</div></div></div><div class="card"><div class="empty">No live withdrawal requests loaded. No funds can be moved from this preview.</div></div></section>
+ <section class="page" id="packages"><div class="heading"><div><h1>Trading packages</h1><div class="sub">Package editor layout — changes are not saved.</div></div><button class="btn" disabled>＋ Add package</button></div><div class="card"><div class="formgrid"><div class="field"><label>Package name</label><input placeholder="e.g. Starter" disabled></div><div class="field"><label>Deposit amount (USDT)</label><input placeholder="Enter amount" disabled></div><div class="field"><label>Duration</label><input placeholder="e.g. 30 days" disabled></div><div class="field"><label>Status</label><select disabled><option>Draft</option><option>Active</option><option>Inactive</option></select></div></div><div class="notice">Package terms must be transparent and approved before being offered to users. Saving is not connected.</div></div></section>
+ <section class="page" id="support"><div class="heading"><div><h1>Two-way support chat</h1><div class="sub">A shared inbox for conversations with users.</div></div></div><div class="chatlayout"><div class="chatlist"><b>Conversations</b><div class="empty">Inbox will load after messaging integration.</div></div><div class="chatbox"><div class="chatplaceholder"><div><div style="font-size:30px">☏</div><b>No conversation selected</b><p>When connected, select a user to read and reply to messages.</p></div></div><div class="toolbar"><input class="search" style="flex:1" placeholder="Write a reply..." disabled><button class="btn" disabled>Send</button></div></div></div></section>
+ <section class="page" id="announcements"><div class="heading"><div><h1>Announcements</h1><div class="sub">Prepare messages for all users or selected accounts.</div></div></div><div class="card"><div class="field"><label>Announcement message</label><textarea rows="5" placeholder="Write an announcement..." disabled></textarea></div><p><button class="btn" disabled>Publish announcement</button></p><div class="muted">Publishing will be enabled after notification permissions are connected.</div></div></section>
+ <section class="page" id="settings"><div class="heading"><div><h1>Platform settings</h1><div class="sub">Central place for configurable platform settings.</div></div></div><div class="card"><div class="formgrid"><div class="field"><label>TRC20 deposit address</label><input value="Configured securely in next integration stage" disabled></div><div class="field"><label>Deposit minimum (USDT)</label><input placeholder="Not configured" disabled></div><div class="field"><label>Withdrawal minimum (USDT)</label><input placeholder="Not configured" disabled></div><div class="field"><label>Maintenance mode</label><select disabled><option>Not connected</option></select></div></div><p><button class="btn" disabled>Save settings</button></p></div></section>
+ <section class="page" id="reports"><div class="heading"><div><h1>Reports & audit logs</h1><div class="sub">Track administrative activity and platform events.</div></div></div><div class="card"><div class="empty">Audit events and reports will appear after secure logging is connected.</div></div></section>
+ </div>
+</main>
+</div>
+<script>
+const names={dashboard:'Dashboard',users:'User management',wallets:'Wallet management',deposits:'Deposit requests',withdrawals:'Withdrawal requests',packages:'Trading packages',support:'Support chat',announcements:'Announcements',settings:'Platform settings',reports:'Reports & audit logs'};
+function go(id){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));document.getElementById('crumb').textContent=names[id]||'Dashboard';document.getElementById('sidebar').classList.remove('open');}
+document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+document.getElementById('menuBtn').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
+</script>
+</body></html>
