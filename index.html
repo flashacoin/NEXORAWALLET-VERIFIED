@@ -175,11 +175,11 @@ html[data-theme="dark"] #nexoraThemeToggle.theme-switch button[aria-pressed="tru
 html[data-theme="dark"] #walletThemeSwitch.theme-switch button[aria-pressed="true"]{background:#34405d;color:#fff}
 @media(max-width:390px){#walletThemeSwitch.theme-switch{top:8px;right:8px}#walletThemeSwitch.theme-switch button{min-width:82px;padding:0 8px;font-size:10px}}
 
-/* NEXORA live ticker: continuous one-way travel, no midpoint reversal/jump */
-.marq{display:block;position:relative;width:auto;max-width:100%;overflow:hidden;white-space:nowrap;contain:paint;isolation:isolate}
-.marq span{display:inline-block!important;width:max-content;max-width:none;white-space:nowrap;will-change:transform;animation:nexoraTickerTravel 34s linear infinite!important;transform:translate3d(100vw,0,0)}
-@keyframes nexoraTickerTravel{0%{transform:translate3d(100vw,0,0)}100%{transform:translate3d(-100%,0,0)}}
-@media(max-width:600px){.marq span{animation-duration:42s!important}}
+/* NEXORA live ticker recovery: visible immediately, smooth leftward movement */
+.marq{display:block!important;position:relative;width:auto;max-width:100%;min-height:38px;overflow:hidden;white-space:nowrap;contain:paint;isolation:isolate;visibility:visible!important;opacity:1!important}
+.marq span{display:inline-block!important;visibility:visible!important;opacity:1!important;width:max-content;max-width:none;white-space:nowrap;will-change:transform;animation:nexoraTickerVisible 30s linear infinite!important;transform:translate3d(0,0,0);font-size:13px;line-height:22px}
+@keyframes nexoraTickerVisible{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(-100%,0,0)}}
+@media(max-width:600px){.marq span{animation-duration:38s!important}}
 @media(prefers-reduced-motion:reduce){.marq span{animation:none!important;transform:none!important;white-space:normal;max-width:100%}}
 </style>
 </head>
