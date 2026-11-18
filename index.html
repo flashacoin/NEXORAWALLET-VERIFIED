@@ -180,6 +180,146 @@ html[data-theme="dark"] #walletThemeSwitch.theme-switch button[aria-pressed="tru
 #app .marq span{display:block!important;position:static!important;left:auto!important;top:auto!important;box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;overflow:hidden!important;text-overflow:ellipsis!important;text-align:center!important;white-space:nowrap!important;line-height:22px!important;font-size:13px!important;transform:none!important;will-change:opacity!important;animation:nexoraAnnouncementPulse 20s linear infinite!important}
 @keyframes nexoraAnnouncementPulse{0%,49.99%{opacity:1}50%,99.99%{opacity:0}100%{opacity:1}}
 
+
+/* NEXORA DAY MODE — faithful lavender / white premium wallet reference */
+html:not([data-theme="dark"]){
+ color-scheme:light;
+ --bg:#f0ecf8;--bg2:#ffffff;--card:#ffffff;
+ --green:#246f5b;--blue:#5369d9;--purple:#8066e8;
+ --white:#171923;--muted:#81849a;--red:#d94e68;
+ --line:#e8e4f0;--shadow:0 10px 28px rgba(67,54,111,.075);
+}
+html:not([data-theme="dark"]) body{
+ background:linear-gradient(135deg,#f5effb 0%,#eff2fb 48%,#f7f3fb 100%);
+ color:#171923;
+}
+html:not([data-theme="dark"]) body::before{
+ background-image:linear-gradient(rgba(125,105,178,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(125,105,178,.025) 1px,transparent 1px),radial-gradient(ellipse at 15% 5%,rgba(190,154,226,.20),transparent 38%),radial-gradient(ellipse at 90% 75%,rgba(132,157,230,.13),transparent 42%);
+ background-size:34px 34px,34px 34px,auto,auto;
+}
+html:not([data-theme="dark"]) #app{background:transparent}
+html:not([data-theme="dark"]) .hdr{
+ background:rgba(255,255,255,.92);color:#171923;border-bottom:1px solid #e8e4f0;
+ box-shadow:0 4px 18px rgba(63,54,105,.045);
+}
+html:not([data-theme="dark"]) .logo{
+ background:linear-gradient(100deg,#5d4cc2,#397bd4);-webkit-background-clip:text;background-clip:text;color:transparent;
+ animation:none;letter-spacing:-.55px;font-weight:800;
+}
+html:not([data-theme="dark"]) .bell{color:#33364a}
+html:not([data-theme="dark"]) .hero{
+ background:linear-gradient(128deg,#685bd4 0%,#7965e6 52%,#9275e9 100%);
+ color:#fff;border:1px solid rgba(255,255,255,.32);border-radius:24px;
+ padding:22px 18px;margin:14px;
+ box-shadow:0 16px 32px rgba(93,76,184,.20),inset 0 1px 0 rgba(255,255,255,.22);
+}
+html:not([data-theme="dark"]) .hero .muted,
+html:not([data-theme="dark"]) .hero .small{color:rgba(255,255,255,.78)!important}
+html:not([data-theme="dark"]) .hero .pill.g{background:rgba(255,255,255,.20);color:#fff;border:1px solid rgba(255,255,255,.25)}
+html:not([data-theme="dark"]) .bal-big{
+ background:none;color:#fff;-webkit-text-fill-color:#fff;
+ font-size:36px;letter-spacing:-1.1px;text-shadow:0 2px 12px rgba(40,30,105,.12);
+}
+html:not([data-theme="dark"]) .grad-btn{
+ background:linear-gradient(110deg,#fff,#f2efff);color:#5b4bc1;
+ border:1px solid rgba(255,255,255,.65);border-radius:14px;
+ box-shadow:0 7px 16px rgba(48,35,112,.14);font-weight:750;
+}
+html:not([data-theme="dark"]) .ghost-btn{
+ background:#fff;color:#303349;border:1px solid #e9e7f0;border-radius:14px;
+ box-shadow:0 4px 12px rgba(45,43,82,.045);
+}
+html:not([data-theme="dark"]) .glass,
+html:not([data-theme="dark"]) .card.glass{
+ background:rgba(255,255,255,.96);border:1px solid #e8e8f2;
+ box-shadow:0 10px 25px rgba(54,54,100,.065);backdrop-filter:blur(12px);
+}
+html:not([data-theme="dark"]) .card{
+ border-radius:20px;padding:16px;margin:12px 14px;
+}
+html:not([data-theme="dark"]) .grid3.card.glass{gap:9px}
+html:not([data-theme="dark"]) .stat{
+ background:linear-gradient(180deg,#fff 0%,#fcfbff 100%);
+ border:1px solid #e6e8f2;border-radius:17px;padding:14px 9px;
+ box-shadow:0 4px 12px rgba(46,55,100,.035);
+}
+html:not([data-theme="dark"]) .stat .v{color:#23775f;font-weight:800;font-size:17px}
+html:not([data-theme="dark"]) .stat .l{color:#8188a0;font-size:9px;letter-spacing:.25px}
+html:not([data-theme="dark"]) .sec{
+ color:#7f8da8;font-size:13px;font-weight:800;letter-spacing:.8px;
+ margin:18px 14px 8px;text-transform:uppercase;
+}
+html:not([data-theme="dark"]) .marq{
+ background:#f5f3fc;border:1px solid #e5e2f0;border-radius:12px;
+ box-shadow:inset 0 1px 2px rgba(50,45,90,.025);
+}
+html:not([data-theme="dark"]) .marq span{color:#5e6fd0}
+html:not([data-theme="dark"]) .pkg{
+ background:linear-gradient(145deg,#fff,#f8f6ff);
+ border:1px solid #e8e3f4;border-radius:19px;
+ box-shadow:0 9px 22px rgba(61,51,112,.065);
+}
+html:not([data-theme="dark"]) .pkg::before{background:linear-gradient(90deg,#7664dc,#6b9ce9)}
+html:not([data-theme="dark"]) .pkg .amt{color:#6554c9}
+html:not([data-theme="dark"]) .pill.g{background:#e5f5ef;color:#26765f}
+html:not([data-theme="dark"]) .pill.b{background:#eaf0ff;color:#526bd0}
+html:not([data-theme="dark"]) .pill.p{background:#f0eaff;color:#7559c7}
+html:not([data-theme="dark"]) .coin-row,
+html:not([data-theme="dark"]) .wallet-opt,
+html:not([data-theme="dark"]) .menu-item,
+html:not([data-theme="dark"]) .notif,
+html:not([data-theme="dark"]) .qa{
+ background:#fff;border:1px solid #e8e8f1;
+ box-shadow:0 5px 14px rgba(49,50,91,.045);border-radius:16px;
+}
+html:not([data-theme="dark"]) .wallet-opt .wic{
+ background:linear-gradient(145deg,#eeeaff,#e6efff);color:#6256c7;
+}
+html:not([data-theme="dark"]) .tab{background:#fff;border:1px solid #e6e6f0;color:#737b91}
+html:not([data-theme="dark"]) .tab.on{
+ background:#eeeaff;color:#5d4fc4;border-color:#d8d0f8;
+}
+html:not([data-theme="dark"]) input,
+html:not([data-theme="dark"]) select,
+html:not([data-theme="dark"]) textarea{
+ background:#fff;color:#25283a;border:1px solid #e3e5ef;
+ box-shadow:0 2px 7px rgba(43,47,85,.025);
+}
+html:not([data-theme="dark"]) input:focus,
+html:not([data-theme="dark"]) select:focus,
+html:not([data-theme="dark"]) textarea:focus{
+ border-color:#8d7ae4;box-shadow:0 0 0 3px rgba(125,103,220,.13);
+}
+html:not([data-theme="dark"]) select option{background:#fff;color:#25283a}
+html:not([data-theme="dark"]) label{color:#8188a0}
+html:not([data-theme="dark"]) .bar{background:#ececf5}
+html:not([data-theme="dark"]) .bar i{background:linear-gradient(90deg,#7663dc,#75a5eb)}
+html:not([data-theme="dark"]) .chat-b .bub{background:#fff;border:1px solid #e8e8f1;color:#24263a}
+html:not([data-theme="dark"]) .chat-b.me .bub{background:#eeeaff;border-color:#ddd5fa;color:#34304e}
+html:not([data-theme="dark"]) .toast{background:#fff;color:#24263a;border:1px solid #e7e3f2;box-shadow:0 10px 28px rgba(49,42,92,.12)}
+html:not([data-theme="dark"]) .vip{background:linear-gradient(135deg,#eee8ff,#e9f0ff);border:1px solid #dcd5f5}
+html:not([data-theme="dark"]) .nav,
+html:not([data-theme="dark"]) .bottom-nav,
+html:not([data-theme="dark"]) .tabnav{
+ background:#171923;color:#f7f7fb;border-color:#252938;
+}
+html:not([data-theme="dark"]) .nav button,
+html:not([data-theme="dark"]) .bottom-nav button,
+html:not([data-theme="dark"]) .tabnav button{color:#aeb3c2}
+html:not([data-theme="dark"]) .nav button.active,
+html:not([data-theme="dark"]) .bottom-nav button.active,
+html:not([data-theme="dark"]) .tabnav button.active{
+ background:#242b37;color:#fff;border-radius:14px;
+}
+html:not([data-theme="dark"]) .menu-item .mi,
+html:not([data-theme="dark"]) .nav .ic{filter:none;text-shadow:none}
+@media(min-width:700px){
+ html:not([data-theme="dark"]) #app{max-width:520px}
+ html:not([data-theme="dark"]) .hero{margin-top:20px}
+}
+@media(prefers-reduced-motion:reduce){
+ html:not([data-theme="dark"]) .screen{animation:none}
+}
 </style>
 </head>
 <body>
