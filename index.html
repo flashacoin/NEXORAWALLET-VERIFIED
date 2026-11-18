@@ -86,6 +86,37 @@ label{font-size:12px;color:var(--muted);display:block;margin:0 0 6px 2px;text-tr
 .skel{border-radius:12px;background:linear-gradient(90deg,rgba(255,255,255,.05) 25%,rgba(255,255,255,.1) 50%,rgba(255,255,255,.05) 75%);background-size:200% 100%;animation:sk 1.4s infinite;height:70px;margin-bottom:8px}
 @keyframes sk{to{background-position:-200% 0}}
 .vip{background:linear-gradient(135deg,rgba(146,92,255,.25),rgba(49,139,255,.2));border:1px solid rgba(146,92,255,.4)}
+
+/* NEXORA visual refresh: soft white day theme, matching dark theme, dimensional surfaces */
+:root{--bg:#f4f6fc;--bg2:#ffffff;--card:#ffffff;--green:#6654c8;--blue:#3986e8;--purple:#9a72e8;--white:#20243a;--muted:#778099;--red:#e85c78;color-scheme:light}
+html[data-theme="dark"]{color-scheme:dark;--bg:#090e1b;--bg2:#111a2b;--card:#17243a;--green:#61e3bd;--blue:#68aaff;--purple:#b59aff;--white:#f4f6ff;--muted:#a0acc2;--red:#ff7188}
+body{background:var(--bg);color:var(--white);transition:background .25s,color .25s}
+body::before{background:radial-gradient(circle at 12% 5%,rgba(116,99,220,.12),transparent 36%),radial-gradient(circle at 90% 70%,rgba(62,145,230,.10),transparent 38%)}
+.glass,.card.glass{background:rgba(255,255,255,.88);border:1px solid rgba(96,111,157,.13);box-shadow:0 12px 34px rgba(42,54,99,.08);backdrop-filter:blur(16px)}
+html[data-theme="dark"] .glass,html[data-theme="dark"] .card.glass{background:rgba(23,36,58,.88);border-color:rgba(255,255,255,.08);box-shadow:0 12px 34px rgba(0,0,0,.22)}
+.card,.stat,.coin-row,.notif,.wallet-opt,.menu-item,.qa{background:var(--card);border:1px solid rgba(96,111,157,.12);box-shadow:0 8px 24px rgba(42,54,99,.055)}
+html[data-theme="dark"] .card,html[data-theme="dark"] .stat,html[data-theme="dark"] .coin-row,html[data-theme="dark"] .notif,html[data-theme="dark"] .wallet-opt,html[data-theme="dark"] .menu-item,html[data-theme="dark"] .qa{border-color:rgba(255,255,255,.07);box-shadow:0 8px 24px rgba(0,0,0,.16)}
+.hdr{background:rgba(255,255,255,.88);border-bottom:1px solid rgba(96,111,157,.12);box-shadow:0 5px 20px rgba(42,54,99,.04)}
+html[data-theme="dark"] .hdr{background:rgba(9,14,27,.88);border-color:rgba(255,255,255,.07)}
+.grad-btn{background:linear-gradient(135deg,#7464d8,#4a9ae9);color:#fff;box-shadow:0 8px 18px rgba(101,91,205,.25)}
+.ghost-btn{background:#f1f3fb;color:#303653;border-color:#e0e4f0}
+html[data-theme="dark"] .ghost-btn{background:#202d43;color:var(--white);border-color:#34435c}
+input,select,textarea{background:#fff;color:#252b43;border-color:#dfe4f0}
+html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:#111d30;color:var(--white);border-color:#34435c}
+select option{background:var(--bg2);color:var(--white)}
+.nav{background:rgba(255,255,255,.96);border-top:1px solid #e4e8f2;box-shadow:0 -8px 24px rgba(44,54,100,.08)}
+.nav button{color:#8790a8}.nav .on{color:#6654c8}
+html[data-theme="dark"] .nav{background:rgba(9,14,27,.96);border-color:rgba(255,255,255,.09)}html[data-theme="dark"] .nav button{color:#9eabc0}html[data-theme="dark"] .nav .on{color:var(--green)}
+.hero{background:linear-gradient(135deg,#e9e6ff 0%,#e6f1ff 55%,#f4eaff 100%);border:1px solid #dedafa;box-shadow:0 16px 34px rgba(94,84,174,.14)}
+html[data-theme="dark"] .hero{background:linear-gradient(135deg,#1b2945,#252447);border-color:#39486a}
+.bal-big{background:linear-gradient(90deg,#6654c8,#3986e8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pkg{background:linear-gradient(145deg,#fff,#f1f2ff 70%,#edf6ff);border:1px solid #e0e2f5;box-shadow:0 12px 28px rgba(70,79,145,.10)}
+html[data-theme="dark"] .pkg{background:linear-gradient(145deg,#1a2942,#171d35);border-color:#354766}
+.stat .v{color:var(--green)}.coin-ic,.wallet-opt .wic{box-shadow:inset 0 2px 4px rgba(255,255,255,.65),0 6px 12px rgba(36,49,96,.16);border:1px solid rgba(255,255,255,.55)}
+.menu-item .mi,.nav .ic{filter:drop-shadow(0 2px 2px rgba(36,49,96,.22));text-shadow:0 1px 0 #fff}
+.bell{color:var(--white)}.toast{background:var(--card);color:var(--white);box-shadow:0 10px 28px rgba(0,0,0,.16)}
+.theme-switch{position:fixed;z-index:1001;top:12px;right:58px;border:1px solid rgba(105,113,155,.2);border-radius:999px;padding:7px 11px;background:rgba(255,255,255,.94);color:#343955;box-shadow:0 5px 16px rgba(40,50,90,.12);font-size:12px;font-weight:700;cursor:pointer;backdrop-filter:blur(10px)}
+html[data-theme="dark"] .theme-switch{background:#1b2940;color:#f3f5ff;border-color:#3b4a64}
 </style>
 </head>
 <body>
@@ -177,7 +208,10 @@ function scr_vip(){var h=hdr('VIP')+'<div class="card glass vip"><b>VIP Membersh
 function vipUp(){if(ME.points<500)return toast('Need 500 points');ME.points-=500;ME.vip=Math.min(4,ME.vip+1);addNotif(ME.id,'VIP upgrade','You are now VIP '+ME.vip,'vip');save('db',DB);toast('VIP '+ME.vip);render()}
 var wtab=0,selNet='',selCoin='',mcat='All',sel=0;
 function admFetch(){var b=localStorage.getItem('fw_admin_cfg');if(!b)return;try{var d=JSON.parse(b);if(d.t&&d.t>now()-600000){cfg=d.cfg;window.FW_HOOK=d.hook||''}}catch(e){}}
-function render(){var needAuth=ROUTE!=='login'&&ROUTE!=='signup'&&ROUTE!=='forgot'&&ROUTE!=='recover'&&ROUTE!=='twofa';if(needAuth&&!me()){ROUTE='login';$('app').innerHTML=scr_login();return}if(ME){ME.refs=ME.refs||0;ME.refEarn=ME.refEarn||0}$('app').innerHTML=scr()}
+function applyWalletTheme(){var t=localStorage.getItem('fw_theme')||'light';document.documentElement.setAttribute('data-theme',t);var b=document.getElementById('walletThemeSwitch');if(b)b.textContent=t==='light'?'☾ Dark':'☀ Day'}
+function toggleWalletTheme(){var t=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light';localStorage.setItem('fw_theme',t);applyWalletTheme()}
+function ensureWalletThemeButton(){var b=document.getElementById('walletThemeSwitch');if(!b){b=document.createElement('button');b.id='walletThemeSwitch';b.className='theme-switch';b.type='button';b.onclick=toggleWalletTheme;document.body.appendChild(b)}applyWalletTheme()}
+function render(){var needAuth=ROUTE!=='login'&&ROUTE!=='signup'&&ROUTE!=='forgot'&&ROUTE!=='recover'&&ROUTE!=='twofa';if(needAuth&&!me()){ROUTE='login';$('app').innerHTML=scr_login();ensureWalletThemeButton();return}if(ME){ME.refs=ME.refs||0;ME.refEarn=ME.refEarn||0}$('app').innerHTML=scr();ensureWalletThemeButton()}
 function scr(){if(ROUTE==='login')return scr_login();if(ROUTE==='signup')return scr_signup();if(ROUTE==='forgot')return scr_forgot();if(ROUTE==='recover')return scr_recover();if(ROUTE==='twofa')return scr_twofa();if(ROUTE==='home')return scr_home();if(ROUTE==='notifs')return scr_notifs();if(ROUTE==='markets')return scr_markets();if(ROUTE==='asset')return scr_asset();if(ROUTE==='trade')return scr_trade();if(ROUTE==='wallet')return scr_wallet();if(ROUTE==='profile')return scr_profile();if(ROUTE==='security')return scr_security();if(ROUTE==='rewards')return scr_rewards();if(ROUTE==='referral')return scr_referral();if(ROUTE==='chat')return scr_chat();if(ROUTE==='support')return scr_support();if(ROUTE==='ticket')return scr_ticket();if(ROUTE==='vip')return scr_vip();return scr_home()}
 function boot(){cfg=load('cfg',DEF);render();fetch('fw_admin.json').then(function(r){return r.json()}).then(function(d){cfg=d.cfg||cfg;window.FW_HOOK=d.hook||'';save('cfg',cfg);render()}).catch(function(){})}
 window.addEventListener('load',boot);
