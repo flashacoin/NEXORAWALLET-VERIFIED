@@ -12,7 +12,7 @@ create table if not exists public.nx_wallet_ledger (
   amount numeric(30,10) not null check (amount <> 0),
   entry_type text not null check (entry_type in (
     'deposit_credit','withdrawal_debit','withdrawal_refund',
-    'payment_debit','payment_refund','admin_adjustment','transfer_debit','transfer_credit'
+    'payment_debit','payment_refund','admin_adjustment','transfer_debit','transfer_credit','opening_balance'
   )),
   reference_type text,
   reference_id uuid,
@@ -120,6 +120,14 @@ create table if not exists public.nx_admin_audit_logs (
 );
 create index if not exists nx_admin_audit_created_idx on public.nx_admin_audit_logs(created_at desc);
 
+-- Backfill non-zero existing balances into the ledger without changing wallet balances.
+insert into public.nx_wallet_ledger(wallet_id,user_id,asset_code,amount,entry_type,reference_type,idempotency_key,metadata)
+select id,user_id,asset_code,balance,'opening_balance','migration', 'opening:'||id::text,
+       jsonb_build_object('source','existing_wallet_balance')
+from public.wallets
+where balance <> 0
+on conflict (idempotency_key) do nothing;
+
 -- Enable RLS and deny direct client writes.
 alter table public.nx_wallet_ledger enable row level security;
 alter table public.nx_deposits enable row level security;
@@ -189,6 +197,16 @@ begin
   if p_amount = 0 or p_amount is null then
     raise exception 'amount must be non-zero';
   end if;
+  if p_entry_type not in ('deposit_credit','withdrawal_debit','withdrawal_refund',
+    'payment_debit','payment_refund','admin_adjustment','transfer_debit','transfer_credit') then
+    raise exception 'invalid entry type';
+  end if;
+  if p_entry_type in ('deposit_credit','withdrawal_refund','payment_refund','transfer_credit') and p_amount <= 0 then
+    raise exception 'credit entries must be positive';
+  end if;
+  if p_entry_type in ('withdrawal_debit','payment_debit','transfer_debit') and p_amount >= 0 then
+    raise exception 'debit entries must be negative';
+  end if;
   if p_idempotency_key is null or length(trim(p_idempotency_key)) < 8 then
     raise exception 'idempotency key required';
   end if;
@@ -214,7 +232,15 @@ begin
   returning id into v_entry_id;
 
   if v_entry_id is null then
-    select id into v_entry_id from public.nx_wallet_ledger where idempotency_key = p_idempotency_key;
+    select id into v_entry_id from public.nx_wallet_ledger
+      where idempotency_key = p_idempotency_key
+        and wallet_id = v_wallet_id and user_id = p_user_id and asset_code = p_asset_code
+        and amount = p_amount and entry_type = p_entry_type
+        and reference_type is not distinct from p_reference_type
+        and reference_id is not distinct from p_reference_id;
+    if v_entry_id is null then
+      raise exception 'idempotency key reused for a different operation';
+    end if;
     return v_entry_id;
   end if;
 
