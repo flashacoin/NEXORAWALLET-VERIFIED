@@ -7,16 +7,55 @@
 :root{--bg:#080a0f;--panel:#11151e;--panel2:#151b26;--line:#252c39;--text:#f4f6fa;--muted:#8993a4;--gold:#d8b45b;--green:#4bd6a0}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px Inter,system-ui,sans-serif}button{font:inherit;color:inherit;cursor:pointer}.layout{min-height:100vh;display:grid;grid-template-columns:245px 1fr}.sidebar{padding:25px 17px;border-right:1px solid var(--line);background:#0c1017;display:flex;flex-direction:column;gap:24px}.brand{font-weight:850;letter-spacing:2px;font-size:20px}.brand span{color:var(--gold)}.subbrand{font-size:11px;color:var(--muted);letter-spacing:1.4px;margin-top:5px}.nav{display:grid;gap:5px}.nav button{background:transparent;border:0;text-align:left;padding:12px;border-radius:11px;color:#aab3c1}.nav button.active,.nav button:hover{background:#1a202b;color:#fff}.nav button.active{border-left:2px solid var(--gold)}.sidebottom{margin-top:auto;color:var(--muted);font-size:12px}.main{min-width:0}.topbar{height:72px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 32px}.topbar small{color:var(--muted)}.pill{border:1px solid #4d4227;color:var(--gold);background:#211c13;padding:7px 11px;border-radius:30px;font-size:12px}.content{max-width:1120px;margin:auto;padding:30px}.hello{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:23px}.hello h1{font-size:25px;margin:0 0 6px}.hello p{margin:0;color:var(--muted)}.balance{padding:25px;border-radius:19px;border:1px solid #302b20;background:radial-gradient(ellipse at 80% 0,#2b261b,#151922 65%);margin-bottom:17px}.balance label{font-size:12px;color:#a6aebb}.amount{font-size:34px;font-weight:750;letter-spacing:-.8px;margin:13px 0}.amount span{font-size:16px;color:var(--gold)}.balancefoot{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:19px}.action{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:17px 13px;text-align:center}.action .icon{font-size:22px;color:var(--gold);margin-bottom:8px}.action b{font-size:13px}.cards{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}.card{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:19px}.card h2{font-size:15px;margin:0 0 15px}.asset{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}.coin{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#17382e;color:var(--green);font-weight:800}.asset small{display:block;color:var(--muted);margin-top:3px}.asset strong{margin-left:auto}.method{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}.method:last-child{border-bottom:0}.status{color:var(--green);font-size:12px}.footnote{color:var(--muted);font-size:12px;margin-top:16px}.preview{margin-top:16px;padding:11px 13px;border:1px dashed #51432a;border-radius:12px;color:#bca46d;background:#19160f;font-size:12px}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{display:none}.topbar{height:60px;padding:0 17px}.content{padding:22px 16px}.cards{grid-template-columns:1fr}.actions{grid-template-columns:repeat(2,1fr)}.hello h1{font-size:22px}.balance{padding:21px}.amount{font-size:30px}}
+
+.authbar{display:flex;gap:8px;align-items:center}.authbtn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 12px}.authpanel{display:none;margin:0 0 18px;padding:16px;border:1px solid var(--line);border-radius:15px;background:var(--panel)}.authpanel.show{display:block}.authpanel input{display:block;width:100%;margin:8px 0;padding:12px;border:1px solid var(--line);background:#090d13;color:var(--text);border-radius:10px}.authrow{display:flex;gap:8px;flex-wrap:wrap}.notice{color:var(--muted);font-size:12px;margin-top:8px}.activity{font-size:13px;color:var(--muted);padding:8px 0;border-bottom:1px solid var(--line)}.activity strong{color:var(--text)}.balance.live{border-color:#33513f}.balance .amount.loading{opacity:.6}
 </style></head>
 <body><div class="layout">
 <aside class="sidebar"><div><div class="brand">NEXORA<span>.</span></div><div class="subbrand">DIGITAL WALLET</div></div>
 <div class="nav"><button class="active">◫ &nbsp; Overview</button><button>↓ &nbsp; Deposit</button><button>↑ &nbsp; Withdraw</button><button>⇄ &nbsp; Payments</button><button>▤ &nbsp; Transactions</button><button>⚙ &nbsp; Security</button></div>
 <div class="sidebottom">Secure account experience<br>Website · Telegram Mini App</div></aside>
-<main class="main"><header class="topbar"><small>Wallet / Overview</small><span class="pill">UI CONCEPT · V2</span></header>
-<div class="content"><div class="hello"><div><h1>Welcome to NEXORA</h1><p>Your wallet, all in one place.</p></div></div>
-<section class="balance"><label>Wallet balance</label><div class="amount">0.00 <span>USDT</span></div><div class="balancefoot"><span>Available balance</span><span>USDT · TRC20</span></div></section>
+<main class="main"><header class="topbar"><small>Wallet / Overview</small><div class="authbar"><button class="authbtn" id="accountBtn">Sign in</button><span class="pill" id="authState">Not connected</span></div></header>
+<div class="content"><section class="authpanel" id="authPanel"><h2 id="authTitle">Sign in to NEXORA</h2><input id="emailInput" type="email" placeholder="Email address" autocomplete="email"><input id="passwordInput" type="password" placeholder="Password" autocomplete="current-password"><div class="authrow"><button class="authbtn" id="loginBtn">Sign in</button><button class="authbtn" id="signupBtn">Create account</button><button class="authbtn" id="logoutBtn" style="display:none">Sign out</button></div><p class="notice" id="authNotice">Login is required to view your real wallet.</p></section><div class="hello"><div><h1>Welcome to NEXORA</h1><p>Your wallet, all in one place.</p></div></div>
+<section class="balance"><label>Wallet balance</label><div class="amount" id="balanceAmount">— <span>USDT</span></div><div class="balancefoot"><span>Available balance</span><span>USDT · TRC20</span></div></section>
 <div class="actions"><div class="action"><div class="icon">↓</div><b>Deposit</b></div><div class="action"><div class="icon">↑</div><b>Withdraw</b></div><div class="action"><div class="icon">☆</div><b>Pay with Stars</b></div><div class="action"><div class="icon">▤</div><b>History</b></div></div>
-<div class="cards"><section class="card"><h2>Assets</h2><div class="asset"><div class="coin">₮</div><div><b>USDT</b><small>TRON · TRC20</small></div><strong>0.00</strong></div></div></section>
+<div class="cards"><section class="card"><h2>Assets</h2><div class="asset"><div class="coin">₮</div><div><b>USDT</b><small>TRON · TRC20</small></div><strong id="assetAmount">—</strong></div></div></section>
 <section class="card"><h2>Payment methods</h2><div class="method"><span>₮ &nbsp; USDT TRC20</span><span class="status">Planned</span></div><div class="method"><span>⭐ &nbsp; Telegram Stars</span><span class="status">Planned</span></div><div class="footnote">Payment options will appear when enabled and available.</div></section></div>
-<div class="preview">Preview only. This page is a design draft; balances, deposits, withdrawals and payment controls are not connected.</div>
-</div></main></div></body></html>
+<div class="preview" id="connectionNotice">Sign in to load your real wallet. Deposits, withdrawals and payments are disabled until their secure workflows are deployed.</div><section class="card" style="margin-top:16px"><h2>Recent transactions</h2><div id="historyList"><div class="activity">Sign in to load transaction history.</div></div></section>
+</div></main></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+const SUPABASE_URL="https://enfmybsgkhonjprlgusk.supabase.co";
+const SUPABASE_KEY="sb_publishable_myD1MDYUobf3w-nph3hbow_5tIsnJk3";
+const FUNCTION_URL=SUPABASE_URL+"/functions/v1/nexora-wallet";
+const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+const panel=$("authPanel"),notice=$("authNotice"),account=$("accountBtn"),state=$("authState");
+function setNotice(msg){notice.textContent=msg;}
+function formatAmount(v){const n=Number(v);return Number.isFinite(n)?n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:8}):"—";}
+async function callApi(action,token){
+ const res=await fetch(FUNCTION_URL,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY,"Authorization":"Bearer "+token},body:JSON.stringify({action})});
+ const data=await res.json().catch(()=>({}));
+ if(!res.ok)throw new Error(data.error||"Wallet API unavailable");
+ return data;
+}
+async function refreshWallet(session){
+ if(!session){$("balanceAmount").innerHTML="— <span>USDT</span>";$("assetAmount").textContent="—";$("historyList").innerHTML='<div class="activity">Sign in to load transaction history.</div>';return;}
+ state.textContent="Connected";account.textContent="Account";
+ try{
+  const [walletData,historyData]=await Promise.all([callApi("wallet",session.access_token),callApi("history",session.access_token)]);
+  const wallet=walletData.wallets.find(w=>w.asset_code==="USDT")||walletData.wallets[0];
+  const amount=wallet?formatAmount(wallet.balance):"0.00";
+  $("balanceAmount").innerHTML=amount+' <span>'+(wallet?wallet.asset_code:"USDT")+'</span>';
+  $("assetAmount").textContent=amount;
+  $("historyList").innerHTML=historyData.ledger.length?historyData.ledger.map(row=>'<div class="activity"><strong>'+String(row.entry_type).replaceAll("_"," ")+'</strong> · '+formatAmount(row.amount)+' '+String(row.asset_code)+' · '+new Date(row.created_at).toLocaleString()+'</div>').join(""):'<div class="activity">No transactions yet.</div>';
+  $("connectionNotice").textContent="Wallet balance and history loaded from your authenticated account.";
+ }catch(e){$("connectionNotice").textContent="Login succeeded, but the V2 wallet API is not deployed or database migration is pending. "+e.message;$("historyList").innerHTML='<div class="activity">Wallet API not ready. Your account login remains active.</div>';}
+}
+account.addEventListener("click",()=>panel.classList.toggle("show"));
+$("loginBtn").addEventListener("click",async()=>{const email=$("emailInput").value.trim(),password=$("passwordInput").value;if(!email||!password){setNotice("Enter email and password.");return;}setNotice("Signing in…");const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error){setNotice(error.message);return;}setNotice("Signed in.");refreshWallet(data.session);});
+$("signupBtn").addEventListener("click",async()=>{const email=$("emailInput").value.trim(),password=$("passwordInput").value;if(!email||password.length<8){setNotice("Enter email and a password of at least 8 characters.");return;}setNotice("Creating account…");const {data,error}=await supabase.auth.signUp({email,password});if(error){setNotice(error.message);return;}setNotice(data.session?"Account created and signed in.":"Account created. Check your email to confirm, then sign in.");if(data.session)refreshWallet(data.session);});
+$("logoutBtn").addEventListener("click",async()=>{await supabase.auth.signOut();setNotice("Signed out.");state.textContent="Not connected";account.textContent="Sign in";$("logoutBtn").style.display="none";refreshWallet(null);});
+supabase.auth.onAuthStateChange((event,session)=>{if(session){state.textContent="Connected";account.textContent="Account";$("logoutBtn").style.display="inline-block";refreshWallet(session);}else if(event==="SIGNED_OUT"){state.textContent="Not connected";account.textContent="Sign in";$("logoutBtn").style.display="none";}});
+supabase.auth.getSession().then(({data})=>{if(data.session){refreshWallet(data.session);}});
+})();
+</script></body></html>
