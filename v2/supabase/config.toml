@@ -1,0 +1,10 @@
+# NEXORA Wallet V2 — Supabase CLI config for development deployment
+# Link this project locally with: supabase link --project-ref enfmybsgkhonjprlgusk
+# Edge functions keep JWT verification enabled at the gateway.
+project_id = "enfmybsgkhonjprlgusk"
+
+[functions.nexora-wallet]
+verify_jwt = true
+
+[functions.nexora-admin]
+verify_jwt = true
