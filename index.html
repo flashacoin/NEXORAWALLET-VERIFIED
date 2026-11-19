@@ -647,26 +647,33 @@ async function nxLoadUser(user) {
 }
 
 async function li() {
-  const email = $('l_email').value.trim().toLowerCase();
-  const password = $('l_pass').value;
+  toast('Checking your login...');
+  try {
+    const email = $('l_email').value.trim().toLowerCase();
+    const password = $('l_pass').value;
 
-  if (!email || !password) {
-    toast('Enter your email and password');
-    return;
+    if (!email || !password) {
+      toast('Enter your email and password');
+      return;
+    }
+
+    const result = await nexoraSupabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (result.error) {
+      console.error('NEXORA login failed:', result.error);
+      toast(result.error.message || 'Login failed');
+      return;
+    }
+
+    const loaded = await nxLoadUser(result.data.user);
+    if (loaded) toast('Logged in successfully');
+  } catch (error) {
+    console.error('NEXORA login error:', error);
+    toast('Login could not complete: ' + (error && error.message ? error.message : 'Please try again.'));
   }
-
-  const result = await nexoraSupabase.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (result.error) {
-    toast(result.error.message || 'Login failed');
-    return;
-  }
-
-  const loaded = await nxLoadUser(result.data.user);
-  if (loaded) toast('Logged in successfully');
 }
 
 async function su() {
