@@ -32,6 +32,7 @@ const $=id=>document.getElementById(id);
 const panel=$("authPanel"),notice=$("authNotice"),account=$("accountBtn"),state=$("authState");
 function setNotice(msg){notice.textContent=msg;}
 function formatAmount(v){const n=Number(v);return Number.isFinite(n)?n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:8}):"—";}
+function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("\'","&#39;");}
 async function callApi(action,token){
  const res=await fetch(FUNCTION_URL,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY,"Authorization":"Bearer "+token},body:JSON.stringify({action})});
  const data=await res.json().catch(()=>({}));
@@ -45,9 +46,9 @@ async function refreshWallet(session){
   const [walletData,historyData]=await Promise.all([callApi("wallet",session.access_token),callApi("history",session.access_token)]);
   const wallet=walletData.wallets.find(w=>w.asset_code==="USDT")||walletData.wallets[0];
   const amount=wallet?formatAmount(wallet.balance):"0.00";
-  $("balanceAmount").innerHTML=amount+' <span>'+(wallet?wallet.asset_code:"USDT")+'</span>';
+  $("balanceAmount").innerHTML=amount+' <span>'+esc(wallet?wallet.asset_code:"USDT")+'</span>';
   $("assetAmount").textContent=amount;
-  $("historyList").innerHTML=historyData.ledger.length?historyData.ledger.map(row=>'<div class="activity"><strong>'+String(row.entry_type).replaceAll("_"," ")+'</strong> · '+formatAmount(row.amount)+' '+String(row.asset_code)+' · '+new Date(row.created_at).toLocaleString()+'</div>').join(""):'<div class="activity">No transactions yet.</div>';
+  $("historyList").innerHTML=historyData.ledger.length?historyData.ledger.map(row=>'<div class="activity"><strong>'+esc(String(row.entry_type).replaceAll("_"," "))+'</strong> · '+esc(formatAmount(row.amount))+' '+esc(row.asset_code)+' · '+esc(new Date(row.created_at).toLocaleString())+'</div>').join(""):'<div class="activity">No transactions yet.</div>';
   $("connectionNotice").textContent="Wallet balance and history loaded from your authenticated account.";
  }catch(e){$("connectionNotice").textContent="Login succeeded, but the V2 wallet API is not deployed or database migration is pending. "+e.message;$("historyList").innerHTML='<div class="activity">Wallet API not ready. Your account login remains active.</div>';}
 }
