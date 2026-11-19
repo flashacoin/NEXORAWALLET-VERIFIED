@@ -737,8 +737,22 @@ async function fgt() {
   toast('If the account exists, a password reset email has been sent.');
 }
 
-function rec() {
-  toast('Please use the password reset link sent to your email. Set a new password there.');
+async function rec() {
+  const password = $('c_pass') ? $('c_pass').value : '';
+  if (password.length < 8) {
+    toast('New password must be at least 8 characters');
+    return;
+  }
+  const result = await nexoraSupabase.auth.updateUser({ password });
+  if (result.error) {
+    toast(result.error.message || 'Could not update password. Open the latest reset email link and try again.');
+    return;
+  }
+  toast('Password updated successfully. Please log in.');
+  await nexoraSupabase.auth.signOut();
+  ME = null;
+  ROUTE = 'login';
+  render();
 }
 
 function startOrder() {
@@ -768,6 +782,14 @@ function wc() {
 function fwAdminAction() {
   toast('Admin payment actions are still demo-only and cannot move real funds.');
 }
+
+nexoraSupabase.auth.onAuthStateChange(function (event, session) {
+  if (event === 'PASSWORD_RECOVERY') {
+    ME = null;
+    ROUTE = 'recover';
+    render();
+  }
+});
 
 window.addEventListener('load', async function () {
   const sessionResult = await nexoraSupabase.auth.getSession();
