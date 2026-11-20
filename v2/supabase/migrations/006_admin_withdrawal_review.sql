@@ -26,6 +26,7 @@ begin
   v_before_status := v_w.status;
 
   if p_action='approve' then
+    if v_w.status='processing' and v_w.reviewed_by=p_admin_user_id then return v_w; end if;
     if v_w.status not in ('requested','review') then raise exception 'withdrawal cannot be approved from current status'; end if;
     update public.nx_withdrawals set status='processing', reviewed_by=p_admin_user_id,
       reviewed_at=now(), updated_at=now() where id=p_withdrawal_id returning * into v_w;
@@ -36,6 +37,7 @@ begin
   end if;
 
   if p_action='reject' then
+    if v_w.status='rejected' then return v_w; end if;
     if v_w.status not in ('requested','review','approved') then raise exception 'withdrawal cannot be rejected from current status'; end if;
     if p_rejection_reason is null or length(trim(p_rejection_reason)) < 3 then raise exception 'rejection reason required'; end if;
     if v_w.ledger_debit_id is null then raise exception 'reserve ledger entry missing'; end if;
@@ -74,9 +76,24 @@ begin
 
   select * into v_w from public.nx_withdrawals where id=p_withdrawal_id for update;
   if not found then raise exception 'withdrawal not found'; end if;
+  if v_w.status='completed' and v_w.tx_hash=trim(p_tx_hash) then return v_w; end if;
   if v_w.status <> 'processing' then raise exception 'withdrawal must be processing to complete'; end if;
+  if p_tx_hash !~ '^[A-Fa-f0-9]{64}
+    where id=p_withdrawal_id returning * into v_w;
+  insert into public.nx_admin_audit_logs(admin_user_id,action,target_type,target_id,before_data,after_data)
+    values(p_admin_user_id,'withdrawal_completed','withdrawal',p_withdrawal_id::text,
+      jsonb_build_object('status','processing'),jsonb_build_object('status','completed','tx_hash',p_tx_hash));
+  return v_w;
+end;
+$$;
 
-  update public.nx_withdrawals set status='completed',tx_hash=p_tx_hash,updated_at=now()
+revoke all on function public.nx_admin_review_withdrawal(uuid,uuid,text,text) from public, anon, authenticated;
+revoke all on function public.nx_admin_complete_withdrawal(uuid,uuid,text) from public, anon, authenticated;
+grant execute on function public.nx_admin_review_withdrawal(uuid,uuid,text,text) to service_role;
+grant execute on function public.nx_admin_complete_withdrawal(uuid,uuid,text) to service_role;
+ then raise exception 'invalid TRON transaction hash'; end if;
+
+  update public.nx_withdrawals set status='completed',tx_hash=trim(p_tx_hash),updated_at=now()
     where id=p_withdrawal_id returning * into v_w;
   insert into public.nx_admin_audit_logs(admin_user_id,action,target_type,target_id,before_data,after_data)
     values(p_admin_user_id,'withdrawal_completed','withdrawal',p_withdrawal_id::text,
