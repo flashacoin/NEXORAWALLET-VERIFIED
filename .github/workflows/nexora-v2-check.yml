@@ -40,6 +40,37 @@ jobs:
               parse_sql(path.read_text())
               print(f"SQL syntax OK: {path}")
           PY
+      - name: Assert critical wallet safety guards remain present
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          checks = {
+              "v2/supabase/migrations/006_admin_withdrawal_review.sql": [
+                  "for update",
+                  "withdrawal-refund:",
+                  "ledger_refund_id is null",
+                  "v_w.status <> 'processing'",
+                  "transaction hash already used",
+                  "auth.role(),'') <> 'service_role'",
+              "v2/supabase/functions/nexora-admin/index.ts": [
+                  "Bearer ",
+                  "NEXORA_ADMIN_USER_IDS",
+                  "Administrator access required",
+                  "withdrawal_complete",
+                  "Invalid TRON transaction hash",
+              ],
+              "v2/supabase/functions/nexora-deposit-submit/index.ts": [
+                  "tx_hash",
+                  "duplicate",
+              ],
+          }
+          for filename, needles in checks.items():
+              text = Path(filename).read_text().lower()
+              for needle in needles:
+                  if needle.lower() not in text:
+                      raise SystemExit(f"Missing safety guard: {filename}: {needle}")
+              print(f"Safety assertions OK: {filename}")
+          PY
       - name: Syntax-check inline JavaScript in wallet/admin HTML
         run: |
           python3 - <<'PY'
