@@ -194,8 +194,14 @@ begin
   if coalesce(auth.role(),'') <> 'service_role' then
     raise exception 'not authorized';
   end if;
-  if p_amount = 0 or p_amount is null then
+  if p_user_id is null or p_asset_code is null or length(trim(p_asset_code)) = 0 then
+    raise exception 'user and asset are required';
+  end if;
+  if p_amount is null or p_amount = 0 then
     raise exception 'amount must be non-zero';
+  end if;
+  if p_amount <> round(p_amount, 10) then
+    raise exception 'amount precision exceeds 10 decimal places';
   end if;
   if p_entry_type not in ('deposit_credit','withdrawal_debit','withdrawal_refund',
     'payment_debit','payment_refund','admin_adjustment','transfer_debit','transfer_credit') then
@@ -207,8 +213,11 @@ begin
   if p_entry_type in ('withdrawal_debit','payment_debit','transfer_debit') and p_amount >= 0 then
     raise exception 'debit entries must be negative';
   end if;
-  if p_idempotency_key is null or length(trim(p_idempotency_key)) < 8 then
-    raise exception 'idempotency key required';
+  if p_idempotency_key is null or length(trim(p_idempotency_key)) < 8 or length(p_idempotency_key) > 200 then
+    raise exception 'idempotency key must be 8-200 characters';
+  end if;
+  if p_entry_type = 'admin_adjustment' and p_reference_type is null then
+    raise exception 'admin adjustment must include a reference type';
   end if;
 
   select id, balance into v_wallet_id, v_balance
