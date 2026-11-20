@@ -47,6 +47,11 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           checks = {
+              "v2/supabase/migrations/010_withdrawal_idempotency_concurrency.sql": [
+                  "pg_advisory_xact_lock",
+                  "hashtextextended",
+                  "idempotency_key",
+              ],
               "v2/supabase/migrations/006_admin_withdrawal_review.sql": [
                   "for update",
                   "withdrawal-refund:",
