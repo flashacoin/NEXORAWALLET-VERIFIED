@@ -52,6 +52,7 @@ jobs:
                   "v_w.status <> 'processing'",
                   "transaction hash already used",
                   "auth.role(),'') <> 'service_role'",
+              ],
               "v2/supabase/functions/nexora-admin/index.ts": [
                   "Bearer ",
                   "NEXORA_ADMIN_USER_IDS",
