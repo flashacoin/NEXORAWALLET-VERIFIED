@@ -75,6 +75,22 @@ Deno.serve(async (req) => {
       const settings = await query("nx_wallet_settings", "select=setting_key,setting_value,updated_by,updated_at&order=setting_key.asc");
       return json({ settings });
     }
+    if (action === "ledger") {
+      const page = Number((body as any).page ?? 1);
+      const pageSize = Number((body as any).page_size ?? 50);
+      const userId = typeof (body as any).user_id === "string" ? (body as any).user_id.trim() : "";
+      const entryType = typeof (body as any).entry_type === "string" ? (body as any).entry_type.trim() : "";
+      if (!Number.isInteger(page) || page < 1 || page > 10000) return json({ error: "Invalid page" }, 400);
+      if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 100) return json({ error: "Invalid page size" }, 400);
+      if (userId && !/^[0-9a-f-]{36}$/i.test(userId)) return json({ error: "Invalid user ID" }, 400);
+      const allowedTypes = ["deposit_credit","withdrawal_debit","withdrawal_refund","payment_debit","payment_refund","admin_adjustment","transfer_debit","transfer_credit","opening_balance"];
+      if (entryType && !allowedTypes.includes(entryType)) return json({ error: "Invalid entry type" }, 400);
+      const filters = ["select=id,user_id,wallet_id,asset_code,amount,entry_type,reference_type,reference_id,metadata,created_at","order=created_at.desc","limit="+pageSize,"offset="+((page-1)*pageSize)];
+      if (userId) filters.push("user_id=eq."+encodeURIComponent(userId));
+      if (entryType) filters.push("entry_type=eq."+encodeURIComponent(entryType));
+      const ledger = await query("nx_wallet_ledger", filters.join("&"));
+      return json({ ledger, page, page_size: pageSize, has_more: ledger.length===pageSize });
+    }
     if (action === "audit") {
       const audit = await query("nx_admin_audit_logs", "select=id,admin_user_id,action,target_type,target_id,before_data,after_data,created_at&order=created_at.desc&limit=200");
       return json({ audit });
