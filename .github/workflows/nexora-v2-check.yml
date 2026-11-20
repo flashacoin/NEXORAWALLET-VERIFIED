@@ -80,6 +80,24 @@ jobs:
                       raise SystemExit(f"Missing safety guard: {filename}: {needle}")
               print(f"Safety assertions OK: {filename}")
           PY
+      - name: Verify ledger wallet owner and asset foreign key
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          sql = Path("v2/supabase/migrations/012_ledger_wallet_owner_asset_integrity.sql").read_text().lower()
+          required = [
+              "create unique index if not exists wallets_id_user_asset_unique",
+              "on public.wallets(id, user_id, asset_code)",
+              "foreign key (wallet_id, user_id, asset_code)",
+              "references public.wallets(id, user_id, asset_code)",
+              "not valid",
+              "validate constraint nx_wallet_ledger_wallet_owner_asset_fk",
+          ]
+          for item in required:
+              if item not in sql:
+                  raise SystemExit(f"Missing ledger integrity safeguard: {item}")
+          print("Ledger wallet ownership and asset integrity guard OK")
+          PY
       - name: Verify ledger balance row lock and atomic update ordering
         run: |
           python3 - <<'PY'
