@@ -30,6 +30,11 @@
 5. Sign in as a non-admin and attempt an admin API request. Confirm it is denied.
 6. Sign out and confirm the queue is no longer displayed as authenticated.
 
+## Admin exports
+- [ ] Sign in as the admin and load live deposit submissions. Export CSV and confirm the file opens in a spreadsheet with columns intact; do not treat submitted hashes as verified deposits.
+- [ ] Sign in as the admin and load live withdrawals. Export CSV and confirm the fields (request ID, user, amount, fee, net payout, destination, status, and date) are present. Confirm demo data cannot be exported as live records.
+- [ ] Treat CSV files as sensitive: store them securely and do not share user identifiers or wallet destinations publicly.
+
 ## Withdrawal workflow checks
 - Request a withdrawal using staging values only.
 - Confirm the amount and fee reservation are reflected correctly.
