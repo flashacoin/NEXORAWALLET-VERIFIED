@@ -33,7 +33,11 @@ begin
   end if;
 
   if p_action='reject' then
-    if v_w.status='rejected' then return v_w; end if;
+    -- Idempotent retry is safe only when the original refund ledger entry is present.
+    if v_w.status='rejected' then
+      if v_w.ledger_refund_id is null then raise exception 'rejected withdrawal missing refund ledger entry; manual audit required'; end if;
+      return v_w;
+    end if;
     if v_w.status not in ('requested','review','approved') then raise exception 'withdrawal cannot be rejected from current status'; end if;
     if p_rejection_reason is null or length(trim(p_rejection_reason))<3 or length(trim(p_rejection_reason))>500 then raise exception 'valid rejection reason required'; end if;
     if v_w.ledger_debit_id is null then raise exception 'reserve ledger entry missing'; end if;
