@@ -36,6 +36,8 @@
 - [ ] Treat CSV files as sensitive: store them securely and do not share user identifiers or wallet destinations publicly.
 
 ## Withdrawal workflow checks
+- Re-run the reject action on an already rejected test withdrawal; it must return safely without adding another refund.
+- If a rejected withdrawal is missing its refund-ledger reference, the admin retry must fail for manual audit instead of silently accepting inconsistent state.
 - Request a withdrawal using staging values only.
 - Confirm the amount and fee reservation are reflected correctly.
 - Approve a test request; approval must not broadcast or send money.
