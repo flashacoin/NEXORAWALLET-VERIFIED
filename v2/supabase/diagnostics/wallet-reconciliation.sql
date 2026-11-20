@@ -64,3 +64,14 @@ left join public.wallets w on w.id = l.wallet_id
 where w.id is null
    or w.user_id <> l.user_id
    or w.asset_code <> l.asset_code;
+
+-- 9) Preflight for migration 012: ledger entries whose wallet owner or asset
+--    does not match. Resolve manually before validating the composite foreign key.
+select l.id as ledger_id, l.wallet_id, l.user_id, l.asset_code,
+       w.user_id as actual_wallet_user_id, w.asset_code as actual_wallet_asset_code
+from public.nx_wallet_ledger l
+left join public.wallets w on w.id = l.wallet_id
+where w.id is null
+   or w.user_id is distinct from l.user_id
+   or w.asset_code is distinct from l.asset_code
+order by l.created_at;
