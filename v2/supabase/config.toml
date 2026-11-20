@@ -26,3 +26,6 @@ verify_jwt = true
 
 [functions.nexora-deposit-submit]
 verify_jwt = true
+
+[functions.nexora-deposit-verify-preview]
+verify_jwt = true
