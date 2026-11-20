@@ -65,7 +65,7 @@ begin
     reviewed_by=p_admin_user_id, reviewed_at=coalesce(reviewed_at,now()), updated_at=now()
     where id=p_withdrawal_id;
   insert into public.nx_admin_audit_logs(admin_user_id,action,target_type,target_id,before_data,after_data)
-  values(p_admin_user_id,'withdrawal_completed','withdrawal',p_with withdrawal_id::text,
+  values(p_admin_user_id,'withdrawal_completed','withdrawal',p_withdrawal_id::text,
     jsonb_build_object('status',v_row.status,'tx_hash',v_row.tx_hash),jsonb_build_object('status','completed','tx_hash',v_hash));
   return jsonb_build_object('id',p_withdrawal_id,'status','completed','tx_hash',v_hash);
 end; $$;
