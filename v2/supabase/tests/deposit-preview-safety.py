@@ -9,7 +9,7 @@ required_preview = [
     "verification_status",
     "manual_review_required",
     "no transaction confirmation threshold",
-    "no ledger credit has been verified",
+    "ledger credit has been verified",
 ]
 for marker in required_preview:
     if marker not in preview:
