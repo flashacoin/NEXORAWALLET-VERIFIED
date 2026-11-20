@@ -14,6 +14,7 @@ as $$
 declare
   v_w public.nx_withdrawals%rowtype;
   v_refund_id uuid;
+  v_before_status text;
 begin
   if coalesce(auth.role(),'') <> 'service_role' then raise exception 'not authorized'; end if;
   if p_admin_user_id is null then raise exception 'admin required'; end if;
@@ -22,6 +23,7 @@ begin
   select * into v_w from public.nx_withdrawals
     where id=p_withdrawal_id for update;
   if not found then raise exception 'withdrawal not found'; end if;
+  v_before_status := v_w.status;
 
   if p_action='approve' then
     if v_w.status not in ('requested','review') then raise exception 'withdrawal cannot be approved from current status'; end if;
@@ -29,7 +31,7 @@ begin
       reviewed_at=now(), updated_at=now() where id=p_withdrawal_id returning * into v_w;
     insert into public.nx_admin_audit_logs(admin_user_id,action,target_type,target_id,before_data,after_data)
       values(p_admin_user_id,'withdrawal_approved','withdrawal',p_withdrawal_id::text,
-        jsonb_build_object('status',v_w.status),jsonb_build_object('status','processing'));
+        jsonb_build_object('status',v_before_status),jsonb_build_object('status','processing'));
     return v_w;
   end if;
 
@@ -47,7 +49,7 @@ begin
       updated_at=now() where id=p_withdrawal_id returning * into v_w;
     insert into public.nx_admin_audit_logs(admin_user_id,action,target_type,target_id,before_data,after_data)
       values(p_admin_user_id,'withdrawal_rejected_refunded','withdrawal',p_withdrawal_id::text,
-        jsonb_build_object('status',v_w.status),jsonb_build_object('status','rejected','refund_ledger_id',v_refund_id,'reason',p_rejection_reason));
+        jsonb_build_object('status',v_before_status),jsonb_build_object('status','rejected','refund_ledger_id',v_refund_id,'reason',p_rejection_reason));
     return v_w;
   end if;
   raise exception 'unsupported action';
