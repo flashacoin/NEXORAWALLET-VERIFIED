@@ -63,7 +63,8 @@ export function validateUsdtTransfer(
 export function usdtAmountToBaseUnits(amount: string): string | null {
   if (!/^(0|[1-9][0-9]*)(\.[0-9]{1,6})?$/.test(amount)) return null;
   const [whole, fraction = ""] = amount.split(".");
-  const units = whole + fraction.padEnd(6, "0");
-  if (!UINT.test(units) || /^0+$/.test(units)) return null;
-  return units.replace(/^0+(?=[0-9])/, "");
+  const rawUnits = whole + fraction.padEnd(6, "0");
+  const units = rawUnits.replace(/^0+(?=[0-9])/, "");
+  if (!UINT.test(units) || units === "0") return null;
+  return units;
 }
