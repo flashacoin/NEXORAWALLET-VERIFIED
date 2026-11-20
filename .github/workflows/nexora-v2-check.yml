@@ -80,6 +80,21 @@ jobs:
                       raise SystemExit(f"Missing safety guard: {filename}: {needle}")
               print(f"Safety assertions OK: {filename}")
           PY
+      - name: Verify ledger idempotency is checked before balance rejection
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          sql = Path("v2/supabase/migrations/011_ledger_retry_before_balance_check.sql").read_text().lower()
+          lookup = sql.find("select id into v_entry_id from public.nx_wallet_ledger")
+          balance = sql.find("if v_balance + p_amount < 0")
+          insert = sql.find("insert into public.nx_wallet_ledger")
+          if min(lookup, balance, insert) < 0 or not lookup < balance < insert:
+              raise SystemExit("Ledger idempotency lookup must precede balance validation and insert")
+          for required in ("idempotency_key = p_idempotency_key", "idempotency key reused for a different operation", "return v_entry_id"):
+              if required not in sql:
+                  raise SystemExit(f"Missing ledger retry safeguard: {required}")
+          print("Ledger idempotency retry ordering OK")
+          PY
       - name: Verify withdrawal retry lock precedes idempotency lookup
         run: |
           python3 - <<'PY'
