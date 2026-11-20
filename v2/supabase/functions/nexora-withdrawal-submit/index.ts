@@ -15,7 +15,12 @@ Deno.serve(async (req) => {
   const bearer = req.headers.get("Authorization") ?? "";
   if (!bearer.startsWith("Bearer ")) return json({ error: "Sign in required" }, 401);
   const token = bearer.slice(7);
-  const auth = await fetch(url + "/auth/v1/user", { headers: { apikey: anon, Authorization: "Bearer " + token } });
+  let auth: Response;
+  try {
+    auth = await fetch(url + "/auth/v1/user", { headers: { apikey: anon, Authorization: "Bearer " + token } });
+  } catch {
+    return json({ error: "Authentication service unavailable" }, 503);
+  }
   if (!auth.ok) return json({ error: "Invalid or expired session" }, 401);
   const user = await auth.json();
   if (!user?.id) return json({ error: "Invalid session user" }, 401);
@@ -25,10 +30,18 @@ Deno.serve(async (req) => {
   const address = typeof body.destination_address === "string" ? body.destination_address.trim() : "";
   const key = typeof body.idempotency_key === "string" ? body.idempotency_key.trim() : "";
   const network = typeof body.network_code === "string" ? body.network_code : "TRON-TRC20";
-  const min = Number(Deno.env.get("NEXORA_WITHDRAW_MIN") ?? "10");
-  const max = Number(Deno.env.get("NEXORA_WITHDRAW_MAX") ?? "10000");
-  const feeBps = Number(Deno.env.get("NEXORA_WITHDRAW_FEE_BPS") ?? "0");
-  const fixedFee = Number(Deno.env.get("NEXORA_WITHDRAW_FIXED_FEE") ?? "1");
+  // Financial limits/fees must be explicitly configured. Fail closed when absent.
+  const minRaw = Deno.env.get("NEXORA_WITHDRAW_MIN");
+  const maxRaw = Deno.env.get("NEXORA_WITHDRAW_MAX");
+  const feeBpsRaw = Deno.env.get("NEXORA_WITHDRAW_FEE_BPS");
+  const fixedFeeRaw = Deno.env.get("NEXORA_WITHDRAW_FIXED_FEE");
+  if ([minRaw, maxRaw, feeBpsRaw, fixedFeeRaw].some((v) => v === null || v.trim() === "")) {
+    return json({ error: "Withdrawal settings are not configured. Withdrawals are temporarily disabled." }, 503);
+  }
+  const min = Number(minRaw);
+  const max = Number(maxRaw);
+  const feeBps = Number(feeBpsRaw);
+  const fixedFee = Number(fixedFeeRaw);
   if (!Number.isFinite(amount) || amount <= 0 || amount !== Math.round(amount * 1e8) / 1e8) return json({ error: "Amount must be a positive number with up to 8 decimal places" }, 400);
   if (amount < min || amount > max) return json({ error: `Withdrawal amount must be between ${min} and ${max} USDT` }, 400);
   if (network !== "TRON-TRC20") return json({ error: "Only USDT on TRON TRC20 is supported currently" }, 400);
