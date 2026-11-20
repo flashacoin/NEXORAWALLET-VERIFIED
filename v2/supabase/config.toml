@@ -23,3 +23,6 @@ verify_jwt = true
 
 [functions.nexora-withdrawal-submit]
 verify_jwt = true
+
+[functions.nexora-deposit-submit]
+verify_jwt = true
