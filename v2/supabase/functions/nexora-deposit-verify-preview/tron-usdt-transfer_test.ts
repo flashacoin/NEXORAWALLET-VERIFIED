@@ -8,7 +8,7 @@ const evidence: NormalizedTransferEvidence = {
   to: "TDepositAddressConfiguredByServer", value: "1234567",
   receiptResult: "SUCCESS", confirmations: 20,
 };
-const expected: TransferExpectation = {
+function reasonOf(result: ReturnType<typeof validateUsdtTransfer>): string {\n  return result.ok ? "ok" : result.reason;\n}\n\nconst expected: TransferExpectation = {
   transactionId: hash, contractAddress: evidence.contractAddress,
   recipientAddress: evidence.to, minimumConfirmations: 19,
   expectedAmountBaseUnits: "1234567",
@@ -21,27 +21,27 @@ Deno.test("rejects a different transaction ID", () => {
   assertEquals(validateUsdtTransfer({ ...evidence, transactionId: "b".repeat(64) }, expected), { ok: false, reason: "transaction_id_mismatch" });
 });
 Deno.test("rejects a different token contract", () => {
-  assertEquals(validateUsdtTransfer({ ...evidence, contractAddress: "TWrongContract" }, expected).reason, "token_contract_mismatch");
+  assertEquals(reasonOf(validateUsdtTransfer({ ...evidence, contractAddress: "TWrongContract" }, expected)), "token_contract_mismatch");
 });
 Deno.test("rejects a different recipient", () => {
-  assertEquals(validateUsdtTransfer({ ...evidence, to: "TAttacker" }, expected).reason, "recipient_mismatch");
+  assertEquals(reasonOf(validateUsdtTransfer({ ...evidence, to: "TAttacker" }, expected)), "recipient_mismatch");
 });
 Deno.test("rejects non-Transfer event", () => {
-  assertEquals(validateUsdtTransfer({ ...evidence, eventName: "Approval" }, expected).reason, "not_transfer_event");
+  assertEquals(reasonOf(validateUsdtTransfer({ ...evidence, eventName: "Approval" }, expected)), "not_transfer_event");
 });
 Deno.test("rejects unsuccessful transaction", () => {
-  assertEquals(validateUsdtTransfer({ ...evidence, receiptResult: "FAILED" }, expected).reason, "transaction_not_successful");
+  assertEquals(reasonOf(validateUsdtTransfer({ ...evidence, receiptResult: "FAILED" }, expected)), "transaction_not_successful");
 });
 Deno.test("rejects insufficient confirmations", () => {
-  assertEquals(validateUsdtTransfer({ ...evidence, confirmations: 2 }, expected).reason, "insufficient_confirmations");
+  assertEquals(reasonOf(validateUsdtTransfer({ ...evidence, confirmations: 2 }, expected)), "insufficient_confirmations");
 });
 Deno.test("rejects zero, malformed, and mismatched amounts", () => {
-  assertEquals(validateUsdtTransfer({ ...evidence, value: "0" }, expected).reason, "invalid_token_amount");
-  assertEquals(validateUsdtTransfer({ ...evidence, value: "1e6" }, expected).reason, "invalid_token_amount");
-  assertEquals(validateUsdtTransfer({ ...evidence, value: "1234568" }, expected).reason, "amount_mismatch");
+  assertEquals(reasonOf(validateUsdtTransfer({ ...evidence, value: "0" }, expected)), "invalid_token_amount");
+  assertEquals(reasonOf(validateUsdtTransfer({ ...evidence, value: "1e6" }, expected)), "invalid_token_amount");
+  assertEquals(reasonOf(validateUsdtTransfer({ ...evidence, value: "1234568" }, expected)), "amount_mismatch");
 });
 Deno.test("rejects unsafe event indexes", () => {
-  assertEquals(validateUsdtTransfer({ ...evidence, eventIndex: -1 }, expected).reason, "invalid_event_index");
+  assertEquals(reasonOf(validateUsdtTransfer({ ...evidence, eventIndex: -1 }, expected)), "invalid_event_index");
 });
 Deno.test("converts decimal USDT to integer base units exactly", () => {
   assertEquals(usdtAmountToBaseUnits("1"), "1000000");
