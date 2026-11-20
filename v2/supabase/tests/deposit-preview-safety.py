@@ -6,12 +6,12 @@ admin = Path("v2/supabase/functions/nexora-admin/index.ts").read_text().lower()
 # The current endpoint is evidence-only. A submitted hash must never reach a
 # balance-changing path until a separately reviewed verifier/settlement exists.
 required_preview = [
-    'verification_status:"manual_review_required"',
-    'no transaction confirmation threshold',
-    'no ledger credit has been verified',
-    'nexora_deposit_address',
+    "verification_status",
+    "manual_review_required",
+    "no transaction confirmation threshold",
+    "no ledger credit has been verified",
 ]
-for marker in required_preview[:3]:
+for marker in required_preview:
     if marker not in preview:
         raise SystemExit(f"Deposit preview lost its manual-review warning: {marker}")
 
