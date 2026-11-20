@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.nexora-history]
 verify_jwt = true
+
+[functions.nexora-withdrawal-admin]
+verify_jwt = true
