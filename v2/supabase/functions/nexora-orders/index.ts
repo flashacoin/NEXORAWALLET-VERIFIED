@@ -91,7 +91,18 @@ Deno.serve(async (req) => {
         }),
         headers: { Prefer: "return=representation" },
       });
-      if (insertRes.status === 409 || insertRes.status === 400) return fail(409, "Order key conflict");
+      // If another request won the unique-key race, fetch its order and return
+      // it only if the request matches. The database unique constraint prevents duplicates.
+      if (insertRes.status === 409) {
+        const raceRes = await db("nx_payment_orders?idempotency_key=eq." + encodeURIComponent(key) + "&select=id,user_id,product_code,amount,currency,provider,status,expires_at,payment_method");
+        if (!raceRes.ok) return fail(503, "Order recovery lookup unavailable");
+        const raced = (await raceRes.json())?.[0];
+        if (raced && raced.user_id === user.id && raced.product_code === productCode && Number(raced.amount) === price && raced.payment_method === method) {
+          return json({ order: raced, reused: true });
+        }
+        return fail(409, "Order key conflict");
+      }
+      if (!insertRes.ok) return fail(503, "Order creation failed");
       if (!insertRes.ok) return fail(503, "Order creation failed");
       const created = (await insertRes.json())?.[0];
       if (!created) return fail(503, "Order creation failed");
