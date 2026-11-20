@@ -75,6 +75,10 @@ Deno.serve(async (req) => {
       const deposits = await rest("nx_deposits", `select=id,asset_code,network_code,amount,confirmations,required_confirmations,status,tx_hash,created_at&user_id=eq.${userId}&order=created_at.desc&limit=100`);
       return json({ deposits });
     }
+    if (action === "deposit_submissions") {
+      const submissions = await rest("nx_deposit_submissions", `select=id,asset_code,network_code,amount,tx_hash,status,admin_note,created_at,updated_at&user_id=eq.${userId}&order=created_at.desc&limit=100`);
+      return json({ submissions });
+    }
     if (action === "withdrawals") {
       const withdrawals = await rest("nx_withdrawals", `select=id,asset_code,network_code,destination_address,amount,fee_amount,status,tx_hash,rejection_reason,created_at,updated_at&user_id=eq.${userId}&order=created_at.desc&limit=100`);
       return json({ withdrawals });
