@@ -8,7 +8,11 @@ const evidence: NormalizedTransferEvidence = {
   to: "TDepositAddressConfiguredByServer", value: "1234567",
   receiptResult: "SUCCESS", confirmations: 20,
 };
-function reasonOf(result: ReturnType<typeof validateUsdtTransfer>): string {\n  return result.ok ? "ok" : result.reason;\n}\n\nconst expected: TransferExpectation = {
+function reasonOf(result: ReturnType<typeof validateUsdtTransfer>): string {
+  return result.ok ? "ok" : result.reason;
+}
+
+const expected: TransferExpectation = {
   transactionId: hash, contractAddress: evidence.contractAddress,
   recipientAddress: evidence.to, minimumConfirmations: 19,
   expectedAmountBaseUnits: "1234567",
