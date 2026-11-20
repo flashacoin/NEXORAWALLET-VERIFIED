@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.nexora-orders]
 verify_jwt = true
+
+[functions.nexora-wallet-pay]
+verify_jwt = true
