@@ -80,6 +80,7 @@ declare
   v_result jsonb;
   v_balance numeric;
   v_count integer;
+  v_status text;
 begin
   -- A successful payment debits exactly once and creates one durable fulfillment job.
   v_result := public.nx_pay_order_with_wallet(
@@ -135,9 +136,9 @@ begin
   exception when others then
     if sqlerrm <> 'insufficient balance' then raise; end if;
   end;
-  select status into v_result from public.nx_payment_orders
+  select status into v_status from public.nx_payment_orders
     where id='20000000-0000-0000-0000-000000000002';
-  if v_result->>'status' <> 'pending' then raise exception 'FAIL: insufficient payment changed order status'; end if;
+  if v_status <> 'pending' then raise exception 'FAIL: insufficient payment changed order status'; end if;
   select balance into v_balance from public.wallets
     where id='00000000-0000-0000-0000-000000000101';
   if v_balance <> 75 then raise exception 'FAIL: insufficient payment changed balance'; end if;
