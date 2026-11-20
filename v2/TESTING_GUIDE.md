@@ -56,3 +56,23 @@ Stop testing and report the exact screen/error if any of these occur:
 
 ## Current limitations
 The deposit claim queue is not a blockchain verification system. A TX hash alone is untrusted. Automated TRON deposit validation, atomic deposit-credit settlement, production payout integration, and independently validated deployment are not complete. This build is not ready for real funds.
+
+
+## Transaction retry and failure regression matrix
+
+Run these cases only against staging accounts and a staging database. Record the request ID, expected state, actual state, and ledger row IDs for each case.
+
+| Case | Repeat/failure setup | Expected result |
+|---|---|---|
+| Withdrawal request retry | Submit identical details with the same idempotency key twice | Return the original withdrawal ID; reserve funds only once |
+| Idempotency mismatch | Reuse a key with a different amount, fee, network, or destination | Reject; do not create another withdrawal or ledger debit |
+| Insufficient balance | Request more than the available balance | Reject atomically; no withdrawal row with a successful reserve |
+| Admin approval retry | Approve a request, repeat as same admin | Safe response; no duplicate ledger movement and no payout |
+| Admin reject retry | Reject once, then repeat | No second refund; refund ledger reference remains present |
+| Refund reference missing | Simulate rejected state without refund reference in staging | Fail closed and require manual audit |
+| Completion retry | Complete with same hash after completion | Idempotent response; no duplicate payout record |
+| Duplicate completion hash | Use a hash already attached to another withdrawal | Reject the duplicate hash |
+| Invalid completion hash | Submit non-hex or wrong-length hash | Reject; state remains processing |
+| Concurrent actions | Trigger approve/reject concurrently for one request | Only one valid state transition; no double refund or reserve |
+
+These are manual staging scenarios in this guide, not proof that automated integration tests currently execute them. CI syntax checks and static assertions are not substitutes for database-backed concurrency tests.
