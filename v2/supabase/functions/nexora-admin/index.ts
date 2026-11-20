@@ -54,13 +54,13 @@ Deno.serve(async (req) => {
     if (["withdrawal_approve","withdrawal_reject","withdrawal_complete"].includes(action ?? "")) {
       const withdrawalId = typeof body.withdrawal_id === "string" ? body.withdrawal_id.trim() : "";
       if (!/^[0-9a-f-]{36}$/i.test(withdrawalId)) return json({ error: "Invalid withdrawal ID" }, 400);
-      let rpcName = "";
+      let rpcName = "nx_admin_review_withdrawal";
       let rpcArgs: Record<string, unknown> = { p_withdrawal_id: withdrawalId, p_admin_user_id: userId };
-      if (action === "withdrawal_approve") rpcName = "nx_admin_approve_withdrawal";
+      if (action === "withdrawal_approve") rpcArgs.p_action = "approve";
       if (action === "withdrawal_reject") {
         const reason = typeof body.reason === "string" ? body.reason.trim() : "";
         if (reason.length < 3 || reason.length > 500) return json({ error: "Rejection reason must be 3-500 characters" }, 400);
-        rpcName = "nx_admin_reject_withdrawal"; rpcArgs.p_reason = reason;
+        rpcArgs.p_action = "reject"; rpcArgs.p_rejection_reason = reason;
       }
       if (action === "withdrawal_complete") {
         const txHash = typeof body.tx_hash === "string" ? body.tx_hash.trim() : "";
