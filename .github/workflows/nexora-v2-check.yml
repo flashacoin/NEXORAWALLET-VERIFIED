@@ -1,0 +1,29 @@
+name: NEXORA V2 Edge Function Checks
+
+on:
+  push:
+    branches: [nexora-v2]
+    paths:
+      - "v2/supabase/functions/**"
+      - ".github/workflows/nexora-v2-check.yml"
+  pull_request:
+    branches: [nexora-v2]
+    paths:
+      - "v2/supabase/functions/**"
+      - ".github/workflows/nexora-v2-check.yml"
+
+jobs:
+  deno-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check wallet and transaction functions
+        run: |
+          deno check v2/supabase/functions/nexora-wallet/index.ts
+          deno check v2/supabase/functions/nexora-admin/index.ts
+          deno check v2/supabase/functions/nexora-deposit-submit/index.ts
+          deno check v2/supabase/functions/nexora-withdrawal-submit/index.ts
+          deno check v2/supabase/functions/nexora-deposit-verify-preview/index.ts
