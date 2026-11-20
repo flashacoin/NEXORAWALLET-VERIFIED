@@ -61,7 +61,8 @@ jobs:
               ],
               "v2/supabase/functions/nexora-deposit-submit/index.ts": [
                   "tx_hash",
-                  "duplicate",
+                  "p_tx_hash",
+                  "not been credited",
               ],
           }
           for filename, needles in checks.items():
