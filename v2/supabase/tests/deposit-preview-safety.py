@@ -30,7 +30,6 @@ if 'action === "deposit_submissions"' not in admin:
     raise SystemExit("Admin deposit submission review action is missing")
 for forbidden in [
     "deposit_approve",
-    "deposit_credit",
     "nx_admin_settle_deposit",
 ]:
     if forbidden in admin:
