@@ -80,6 +80,22 @@ jobs:
                       raise SystemExit(f"Missing safety guard: {filename}: {needle}")
               print(f"Safety assertions OK: {filename}")
           PY
+      - name: Verify ledger balance row lock and atomic update ordering
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          sql = Path("v2/supabase/migrations/011_ledger_retry_before_balance_check.sql").read_text().lower()
+          lock = sql.find("for update")
+          retry = sql.find("select id into v_entry_id from public.nx_wallet_ledger")
+          balance = sql.find("if v_balance + p_amount < 0")
+          insert = sql.find("insert into public.nx_wallet_ledger")
+          update = sql.find("update public.wallets")
+          if min(lock, retry, balance, insert, update) < 0 or not lock < retry < balance < insert < update:
+              raise SystemExit("Ledger must lock wallet, resolve retry, validate funds, insert ledger, then update balance")
+          if "on conflict (idempotency_key) do nothing" not in sql:
+              raise SystemExit("Ledger unique-key race fallback missing")
+          print("Ledger balance locking and posting order OK")
+          PY
       - name: Verify ledger idempotency is checked before balance rejection
         run: |
           python3 - <<'PY'
