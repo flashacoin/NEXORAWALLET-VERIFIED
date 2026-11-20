@@ -145,6 +145,9 @@ jobs:
               raise SystemExit("Database unique idempotency safeguard missing")
           print("Withdrawal idempotency concurrency ordering OK")
           PY
+      - name: Enforce deposit preview remains read-only
+        run: |
+          python3 v2/supabase/tests/deposit-preview-safety.py
       - name: Assert CSV formula protection exists in both exports
         run: |
           python3 - <<'PY'
