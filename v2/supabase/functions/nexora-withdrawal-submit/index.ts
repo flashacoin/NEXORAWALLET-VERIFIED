@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
   const maxRaw = Deno.env.get("NEXORA_WITHDRAW_MAX");
   const feeBpsRaw = Deno.env.get("NEXORA_WITHDRAW_FEE_BPS");
   const fixedFeeRaw = Deno.env.get("NEXORA_WITHDRAW_FIXED_FEE");
-  if ([minRaw, maxRaw, feeBpsRaw, fixedFeeRaw].some((v) => v === null || v.trim() === "")) {
+  if ([minRaw, maxRaw, feeBpsRaw, fixedFeeRaw].some((v) => v == null || v.trim() === "")) {
     return json({ error: "Withdrawal settings are not configured. Withdrawals are temporarily disabled." }, 503);
   }
   const min = Number(minRaw);
