@@ -27,6 +27,8 @@ jobs:
           deno check v2/supabase/functions/nexora-deposit-submit/index.ts
           deno check v2/supabase/functions/nexora-withdrawal-submit/index.ts
           deno check v2/supabase/functions/nexora-deposit-verify-preview/index.ts
+          deno check v2/supabase/functions/nexora-deposit-verify-preview/tron-usdt-transfer.ts
+          deno test v2/supabase/functions/nexora-deposit-verify-preview/tron-usdt-transfer_test.ts
       - name: Parse SQL migrations for syntax errors
         run: |
           python3 -m pip install --quiet pglast
