@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
   const adminIds = adminIdsRaw.split(",").map((v) => v.trim()).filter(Boolean);
   if (!adminIds.includes(userId)) return json({ error: "Administrator access required" }, 403);
 
-  let body: { action?: string; withdrawal_id?: string; reason?: string; tx_hash?: string };
+  let body: { action?: string; withdrawal_id?: string; reason?: string; tx_hash?: string; review_action?: string };
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
   const action = body.action;
 
