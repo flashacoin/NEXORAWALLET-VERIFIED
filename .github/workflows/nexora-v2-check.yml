@@ -4,12 +4,12 @@ on:
   push:
     branches: [nexora-v2]
     paths:
-      - "v2/supabase/functions/**"
+      - "v2/**"
       - ".github/workflows/nexora-v2-check.yml"
   pull_request:
     branches: [nexora-v2]
     paths:
-      - "v2/supabase/functions/**"
+      - "v2/**"
       - ".github/workflows/nexora-v2-check.yml"
 
 jobs:
@@ -27,3 +27,17 @@ jobs:
           deno check v2/supabase/functions/nexora-deposit-submit/index.ts
           deno check v2/supabase/functions/nexora-withdrawal-submit/index.ts
           deno check v2/supabase/functions/nexora-deposit-verify-preview/index.ts
+      - name: Syntax-check inline JavaScript in wallet/admin HTML
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          for html in [Path("v2/index.html"), Path("v2/admin.html"), Path("v2/admin-deposits.html"), Path("v2/admin-withdrawals.html")]:
+              content = html.read_text()
+              blocks = re.findall(r"<script(?![^>]*src=)[^>]*>(.*?)</script>", content, flags=re.S|re.I)
+              for i, block in enumerate(blocks):
+                  out = Path("/tmp") / f"{html.stem}-inline-{i}.js"
+                  out.write_text(block)
+                  print(f"Checking {out}")
+          PY
+          for js in /tmp/*-inline-*.js; do [ -f "$js" ] && node --check "$js"; done
