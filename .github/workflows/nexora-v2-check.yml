@@ -213,3 +213,8 @@ jobs:
           PGPASSWORD: nexora_ci_only
         run: |
           psql -h localhost -U postgres -d nexora_ci -v ON_ERROR_STOP=1 -f v2/supabase/tests/withdrawal-lifecycle.integration.sql
+      - name: Run deposit submission safety integration tests
+        env:
+          PGPASSWORD: nexora_ci_only
+        run: |
+          psql -h localhost -U postgres -d nexora_ci -v ON_ERROR_STOP=1 -f v2/supabase/tests/deposit-submission.integration.sql
