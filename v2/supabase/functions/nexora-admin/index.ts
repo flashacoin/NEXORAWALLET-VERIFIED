@@ -91,6 +91,10 @@ Deno.serve(async (req) => {
       const deposits = await query("nx_deposits", "select=*&order=created_at.desc&limit=200");
       return json({ deposits });
     }
+    if (action === "deposit_submissions") {
+      const submissions = await query("nx_deposit_submissions", "select=*&order=created_at.desc&limit=200");
+      return json({ submissions });
+    }
     if (action === "withdrawals") {
       const withdrawals = await query("nx_withdrawals", "select=*&order=created_at.desc&limit=200");
       return json({ withdrawals });
