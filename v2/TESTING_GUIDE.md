@@ -45,6 +45,18 @@
 - Completion should only be tested with a simulated/staging transaction hash. Never mark a real payout complete without an actual payout performed by the authorized operator.
 - Re-submit actions and confirm they do not double-refund, double-reserve, or duplicate ledger entries.
 
+## Ledger integrity migration preflight (migration 012)
+
+Before applying `012_ledger_wallet_owner_asset_integrity.sql` in staging:
+
+1. Apply migrations in numeric filename order, including 010 and 011 first.
+2. Run `v2/supabase/diagnostics/wallet-reconciliation.sql` using a read-only staging SQL session.
+3. Inspect result set 9 (ledger wallet owner/asset mismatch). It must return zero rows before migration 012 can validate its composite foreign key.
+4. If it returns rows, stop. Do not edit ledger history or wallet ownership to force the migration through. Investigate and reconcile each record with an authorized reviewer.
+5. Apply migration 012 only after the preflight is clean, then rerun the diagnostics and confirm result set 9 remains empty.
+
+Migration 012 adds a composite foreign key from ledger (wallet, user, asset) to the matching wallet tuple. Its validation is expected to fail closed if historical data is inconsistent. A successful CI SQL parse/static check does not mean this migration has been applied to Supabase or validated against live staging data.
+
 ## Stop and report
 Stop testing and report the exact screen/error if any of these occur:
 - a submitted deposit claim credits a wallet automatically;
