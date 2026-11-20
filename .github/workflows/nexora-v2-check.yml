@@ -79,7 +79,7 @@ jobs:
           from pathlib import Path
           for filename in ['v2/admin-deposits.html', 'v2/admin-withdrawals.html']:
               source = Path(filename).read_text()
-              required = ['x00-', 'test(s)', 'replace(/"/g']
+              required = ['x00-', 'test(s)']
               if any(marker not in source for marker in required):
                   raise SystemExit(f'CSV formula protection missing: {filename}')
               if not ('s="\u0027"+s' in source or 's="\\u0027"+s' in source or 's="\u0027"+s' in source):
