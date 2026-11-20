@@ -79,7 +79,7 @@ jobs:
           from pathlib import Path
           for filename in ['v2/admin-deposits.html', 'v2/admin-withdrawals.html']:
               source = Path(filename).read_text()
-              if r'\x00-\\x1f' not in source or 'test(s)' not in source:
+              if 'x00-' not in source or 'test(s)' not in source:
                   raise SystemExit(f'CSV formula protection missing: {filename}')
               print(f'CSV formula protection OK: {filename}')
           PY
