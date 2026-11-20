@@ -73,6 +73,16 @@ jobs:
                       raise SystemExit(f"Missing safety guard: {filename}: {needle}")
               print(f"Safety assertions OK: {filename}")
           PY
+      - name: Assert CSV formula protection exists in both exports
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for filename in ['v2/admin-deposits.html', 'v2/admin-withdrawals.html']:
+              source = Path(filename).read_text()
+              if r'\\x1f' not in source or 'test(s)' not in source:
+                  raise SystemExit(f'CSV formula protection missing: {filename}')
+              print(f'CSV formula protection OK: {filename}')
+          PY
       - name: Syntax-check inline JavaScript in wallet/admin HTML
         run: |
           python3 - <<'PY'
