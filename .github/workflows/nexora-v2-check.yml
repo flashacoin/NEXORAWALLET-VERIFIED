@@ -79,8 +79,12 @@ jobs:
           from pathlib import Path
           for filename in ['v2/admin-deposits.html', 'v2/admin-withdrawals.html']:
               source = Path(filename).read_text()
-              if 'x00-' not in source or 'test(s)' not in source:
+              required = ['x00-', 'test(s)', 'replace(/"/g']
+              if any(marker not in source for marker in required):
                   raise SystemExit(f'CSV formula protection missing: {filename}')
+              if not ('s="\u0027"+s' in source or 's="\\u0027"+s' in source or 's="\u0027"+s' in source):
+                  # Both implementations must prefix suspicious cells with a literal apostrophe.
+                  raise SystemExit(f'CSV neutralization missing: {filename}')
               print(f'CSV formula protection OK: {filename}')
           PY
       - name: Syntax-check inline JavaScript in wallet/admin HTML
