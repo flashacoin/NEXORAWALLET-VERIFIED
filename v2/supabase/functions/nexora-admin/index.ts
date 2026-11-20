@@ -1,5 +1,6 @@
-// NEXORA Wallet V2 Admin API — authenticated read-only foundation.
-// Mutating admin actions will be added only after DB migrations and approval workflows are tested.
+// NEXORA Wallet V2 Admin API — authenticated admin endpoint.
+// Read actions plus withdrawal review RPCs (approve/reject/record manual payout).
+// This endpoint does not broadcast or transfer funds.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type",
