@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       return json({ deposits });
     }
     if (action === "withdrawals") {
-      const withdrawals = await rest("nx_withdrawals", `select=id,asset_code,network_code,amount,fee_amount,status,tx_hash,rejection_reason,created_at,updated_at&user_id=eq.${userId}&order=created_at.desc&limit=100`);
+      const withdrawals = await rest("nx_withdrawals", `select=id,asset_code,network_code,destination_address,amount,fee_amount,status,tx_hash,rejection_reason,created_at,updated_at&user_id=eq.${userId}&order=created_at.desc&limit=100`);
       return json({ withdrawals });
     }
     return json({ error: "Unknown action" }, 400);
