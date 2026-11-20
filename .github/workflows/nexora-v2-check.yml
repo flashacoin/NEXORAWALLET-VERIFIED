@@ -80,6 +80,22 @@ jobs:
                       raise SystemExit(f"Missing safety guard: {filename}: {needle}")
               print(f"Safety assertions OK: {filename}")
           PY
+      - name: Verify withdrawal retry lock precedes idempotency lookup
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          sql = Path("v2/supabase/migrations/010_withdrawal_idempotency_concurrency.sql").read_text().lower()
+          lock = sql.find("pg_advisory_xact_lock")
+          lookup = sql.find("select * into v_existing")
+          insert = sql.find("insert into public.nx_withdrawals")
+          if min(lock, lookup, insert) < 0 or not lock < lookup < insert:
+              raise SystemExit("Withdrawal idempotency lock must run before lookup and insert")
+          if "hashtextextended(p_user_id::text || ':' || p_idempotency_key, 0)" not in sql:
+              raise SystemExit("Withdrawal lock must be scoped to user and idempotency key")
+          if "unique index if not exists nx_withdrawals_idempotency_unique" not in sql:
+              raise SystemExit("Database unique idempotency safeguard missing")
+          print("Withdrawal idempotency concurrency ordering OK")
+          PY
       - name: Assert CSV formula protection exists in both exports
         run: |
           python3 - <<'PY'
