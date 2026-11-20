@@ -120,17 +120,15 @@ Deno.serve(async (req) => {
     }
 
     if (action === "cancel") {
-      const orderId = typeof body.order_id === "string" ? body.order_id : "";
+      const orderId = typeof body.order_id === "string" ? body.order_id.trim() : "";
       if (!/^[0-9a-f-]{36}$/i.test(orderId)) return fail(400, "Invalid order ID");
-      const response = await db("nx_payment_orders?id=eq." + encodeURIComponent(orderId) + "&user_id=eq." + user.id + "&status=eq.pending&select=id,status", {
-        method: "PATCH",
-        body: JSON.stringify({ status: "cancelled", updated_at: new Date().toISOString() }),
-        headers: { Prefer: "return=representation" },
+      const response = await fetch(url + "/rest/v1/rpc/nx_cancel_payment_order", {
+        method: "POST",
+        headers: { apikey: service, Authorization: "Bearer " + service, "Content-Type": "application/json" },
+        body: JSON.stringify({ p_order_id: orderId, p_user_id: user.id }),
       });
-      if (!response.ok) return fail(503, "Cancellation unavailable");
-      const rows = await response.json();
-      if (!rows?.length) return fail(409, "Order cannot be cancelled");
-      return json({ order: rows[0] });
+      if (!response.ok) return fail(409, "Order cannot be cancelled");
+      return json({ order: await response.json() });
     }
 
     return fail(400, "Unknown action");
