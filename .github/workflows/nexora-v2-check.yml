@@ -173,3 +173,30 @@ jobs:
                   print(f"Checking {out}")
           PY
           for js in /tmp/*-inline-*.js; do [ -f "$js" ] && node --check "$js"; done
+
+  ledger-db-integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: nexora_ci_only
+          POSTGRES_DB: nexora_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d nexora_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Run migration 012 against disposable PostgreSQL
+        env:
+          PGPASSWORD: nexora_ci_only
+        run: |
+          psql -h localhost -U postgres -d nexora_ci -v ON_ERROR_STOP=1 -f v2/supabase/tests/ledger-wallet-owner-asset.integration.sql
