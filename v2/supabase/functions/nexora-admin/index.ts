@@ -25,9 +25,15 @@ Deno.serve(async (req) => {
   if (!bearer.startsWith("Bearer ")) return json({ error: "Authentication required" }, 401);
   const token = bearer.slice(7);
 
-  const authResponse = await fetch(`${url}/auth/v1/user`, {
-    headers: { apikey: anon, Authorization: `Bearer ${token}` },
-  });
+  let authResponse: Response;
+  try {
+    authResponse = await fetch(`${url}/auth/v1/user`, {
+      headers: { apikey: anon, Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch {
+    return json({ error: "Authentication service unavailable" }, 503);
+  }
   if (!authResponse.ok) return json({ error: "Invalid or expired session" }, 401);
   const authUser = await authResponse.json();
   const userId = authUser?.id;
@@ -47,7 +53,7 @@ Deno.serve(async (req) => {
     "Content-Type": "application/json",
   };
   const query = async (table: string, params: string) => {
-    const r = await fetch(`${url}/rest/v1/${table}?${params}`, { headers });
+    const r = await fetch(`${url}/rest/v1/${table}?${params}`, { headers, signal: AbortSignal.timeout(12_000) });
     if (!r.ok) throw new Error("Admin data query failed");
     return r.json();
   };
@@ -112,7 +118,7 @@ Deno.serve(async (req) => {
             p_confirmations: verified.evidence.confirmations,
             p_receipt_result: verified.evidence.receiptResult,
             p_verifier_version: "tron-solidified-withdrawal-v1",
-          }),
+          }), signal: AbortSignal.timeout(12_000),
         });
         const evidenceResult = await evidenceResponse.json().catch(() => null);
         if (!evidenceResponse.ok || !evidenceResult?.recorded) {
@@ -121,7 +127,7 @@ Deno.serve(async (req) => {
         rpcName = "nx_admin_complete_withdrawal"; rpcArgs.p_tx_hash = txHash;
       }
       const rpcResponse = await fetch(`${url}/rest/v1/rpc/${rpcName}`, {
-        method: "POST", headers, body: JSON.stringify(rpcArgs),
+        method: "POST", headers, body: JSON.stringify(rpcArgs), signal: AbortSignal.timeout(12_000),
       });
       const rpcData = await rpcResponse.json().catch(() => null);
       if (!rpcResponse.ok) return json({ error: typeof rpcData === "string" ? rpcData : "Withdrawal action rejected by database" }, rpcResponse.status >= 400 && rpcResponse.status < 600 ? rpcResponse.status : 400);
