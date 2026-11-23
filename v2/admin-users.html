@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEXORA V2 — User Management</title>
+<style>
+:root{color-scheme:dark;--bg:#080b10;--panel:#111722;--line:#263142;--muted:#94a1b4;--text:#edf2f8;--gold:#d8b45b;--green:#3bd39a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px Inter,system-ui,sans-serif}
+header{height:66px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+.brand{font-weight:900;letter-spacing:2px}.brand b{color:var(--gold)}.badge{font-size:11px;color:var(--gold);border:1px solid #554526;border-radius:20px;padding:6px 10px}
+.wrap{max-width:1350px;margin:auto;padding:24px}.muted{color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:17px;margin-bottom:16px}
+input,button{font:inherit;border-radius:9px;padding:10px 12px}input{background:#0a0e15;border:1px solid var(--line);color:var(--text);width:min(360px,100%);margin:5px 5px 5px 0}
+button{background:#1a2330;border:1px solid var(--line);color:var(--text);cursor:pointer;margin:4px}button:disabled{opacity:.45;cursor:not-allowed}
+.primary{border-color:#806a36;color:var(--gold)}.head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;flex-wrap:wrap}
+h1{font-size:24px;margin:0 0 7px}.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:760px}th,td{text-align:left;padding:13px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;color:var(--muted);font-weight:600}td small{display:block;color:var(--muted);margin-top:5px;max-width:300px;overflow-wrap:anywhere}
+.balance{display:inline-block;border:1px solid var(--line);padding:5px 8px;border-radius:8px;margin:2px;font-variant-numeric:tabular-nums}
+.status{font-size:11px;color:var(--green);border:1px solid #24513f;border-radius:20px;padding:5px 9px}
+.note{border:1px dashed #554526;color:#c4a96b;background:#19160f;padding:12px;border-radius:11px;font-size:12px;margin-top:14px}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:14px;flex-wrap:wrap}
+@media(max-width:700px){header{padding:0 13px}.wrap{padding:16px 10px}h1{font-size:20px}}
+</style></head>
+<body>
+<header><div class="brand">NEXORA<b>.</b> <span class="muted">ADMIN</span></div><span class="badge">USER MANAGEMENT · V2</span></header>
+<main class="wrap">
+<section class="panel" id="auth">
+<h2 style="margin:0 0 8px">Administrator sign-in</h2>
+<p class="muted">Sign in with the NEXORA administrator account. The server checks your admin permission before returning user data.</p>
+<input id="email" type="email" autocomplete="username" placeholder="Admin email">
+<input id="password" type="password" autocomplete="current-password" placeholder="Password">
+<button class="primary" id="login">Sign in</button><button id="logout" hidden>Sign out</button>
+<p class="muted" id="message" aria-live="polite">Not connected.</p>
+</section>
+<div class="head"><div><h1>User Management</h1><div class="muted">Read-only customer directory and wallet balances</div></div><span class="status" id="access">ADMIN AUTH REQUIRED</span></div>
+<section class="panel">
+<div class="toolbar"><input id="search" type="search" placeholder="Search email, display name, or exact user ID"><button class="primary" id="find">Search</button><button id="clear">Clear</button><button id="refresh">Refresh</button></div>
+<div class="tablewrap"><table><thead><tr><th>USER</th><th>DISPLAY NAME</th><th>WALLETS / BALANCES</th><th>REGISTERED</th></tr></thead><tbody id="rows"><tr><td colspan="4" class="muted">Sign in to load users.</td></tr></tbody></table></div>
+<div class="pager"><span class="muted" id="pageInfo">Page —</span><div><button id="previous" disabled>← Previous</button><button id="next" disabled>Next →</button></div></div>
+</section>
+<div class="note">Read-only safety mode: this page does not freeze accounts, edit balances, change roles, or delete users. Wallet balances are displayed exactly as returned by the admin API. Any future account restriction or balance adjustment feature must use audited server-side controls and separate approval.</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(()=>{
+const url="https://enfmybsgkhonjprlgusk.supabase.co",key="sb_publishable_myD1MDYUobf3w-nph3hbow_5tIsnJk3";
+const client=window.supabase.createClient(url,key),$=id=>document.getElementById(id);
+let session=null,page=1,hasMore=false,searchTerm="",busy=false;
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=v=>Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:8});
+async function load(){
+ if(!session||busy)return;busy=true;$("message").textContent="Loading users…";
+ $("previous").disabled=true;$("next").disabled=true;
+ try{
+  const response=await fetch(url+"/functions/v1/nexora-admin",{method:"POST",headers:{apikey:key,Authorization:"Bearer "+session.access_token,"Content-Type":"application/json"},body:JSON.stringify({action:"users",page,page_size:50,search:searchTerm})});
+  const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||"Admin API rejected the request");
+  const users=Array.isArray(data.users)?data.users:[],wallets=Array.isArray(data.wallets)?data.wallets:[];
+  const byUser=new Map();for(const w of wallets){if(!byUser.has(w.user_id))byUser.set(w.user_id,[]);byUser.get(w.user_id).push(w);}
+  $("rows").innerHTML=users.map(u=>{
+   const balances=(byUser.get(u.id)||[]).map(w=>'<span class="balance">'+esc(w.asset_code)+': <b>'+fmt(w.balance)+'</b></span>').join(" ");
+   return '<tr><td><b>'+esc(u.email||"No email")+'</b><small>'+esc(u.id)+'</small></td><td>'+esc(u.display_name||"—")+'</td><td>'+(balances||'<span class="muted">No wallet rows</span>')+'</td><td>'+esc(u.created_at?new Date(u.created_at).toLocaleString():"—")+'</td></tr>';
+  }).join("")||'<tr><td colspan="4" class="muted">No users found.</td></tr>';
+  hasMore===Boolean(data.has_more);hasMore=Boolean(data.has_more);
+  $("pageInfo").textContent="Page "+page+" · "+users.length+" users shown"+(searchTerm?" · filtered":"");
+  $("previous").disabled=page<=1;$("next").disabled=!hasMore;
+  $("message").textContent="Administrator verified. Loaded "+users.length+" user records.";
+  $("access").textContent="ADMIN · READ ONLY";
+ }catch(e){$("message").textContent="Could not load users: "+e.message;$("access").textContent="ADMIN API ERROR";$("rows").innerHTML='<tr><td colspan="4" class="muted">Data unavailable. Retry after checking admin access and backend deployment.</td></tr>';}
+ finally{busy=false;}
+}
+$("login").onclick=async()=>{const email=$("email").value.trim(),password=$("password").value;if(!email||!password){$("message").textContent="Enter your admin email and password.";return;}$("message").textContent="Signing in…";const {data,error}=await client.auth.signInWithPassword({email,password});if(error){$("message").textContent=error.message;return;}session=data.session;$("logout").hidden=false;page=1;await load();};
+$("logout").onclick=async()=>{await client.auth.signOut();session=null;$("logout").hidden=true;$("access").textContent="ADMIN AUTH REQUIRED";$("rows").innerHTML='<tr><td colspan="4" class="muted">Sign in to load users.</td></tr>';$("message").textContent="Signed out.";};
+$("find").onclick=()=>{searchTerm=$("search").value.trim();page=1;load();};
+$("search").addEventListener("keydown",e=>{if(e.key==="Enter")$("find").click();});
+$("clear").onclick=()=>{$("search").value="";searchTerm="";page=1;load();};
+$("refresh").onclick=()=>load();
+$("previous").onclick=()=>{if(page>1){page--;load();}};
+$("next").onclick=()=>{if(hasMore){page++;load();}};
+})();
+</script></body></html>
