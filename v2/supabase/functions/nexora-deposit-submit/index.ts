@@ -9,9 +9,9 @@ Deno.serve(async(req)=>{
  const authHeader=req.headers.get("Authorization")??"";
  if(!authHeader.startsWith("Bearer ")) return json({error:"Sign in required"},401);
  let auth:Response;
- try{auth=await fetch(url+"/auth/v1/user",{headers:{apikey:anon,Authorization:authHeader}})}catch{return json({error:"Authentication service unavailable"},503)}
+ try{auth=await fetch(url+"/auth/v1/user",{headers:{apikey:anon,Authorization:authHeader},signal:AbortSignal.timeout(10000)})}catch{return json({error:"Authentication service unavailable"},503)}
  if(!auth.ok) return json({error:"Invalid or expired session"},401);
- const user=await auth.json(); if(!user?.id) return json({error:"Invalid user"},401);
+ const user=await auth.json().catch(()=>null); if(!user?.id) return json({error:"Invalid user"},401);
  let body:any; try{body=await req.json()}catch{return json({error:"Invalid JSON"},400)}
  const amount=Number(body?.amount), network=body?.network_code??"TRON-TRC20", hash=typeof body?.tx_hash==="string"?body.tx_hash.trim():"";
  if(!Number.isFinite(amount)||amount<=0||amount!==Math.round(amount*1e6)/1e6) return json({error:"Amount must be positive with up to 6 USDT decimals"},400);
@@ -19,7 +19,7 @@ Deno.serve(async(req)=>{
  if(!/^[A-Fa-f0-9]{64}$/.test(hash)) return json({error:"Invalid transaction hash format"},400);
  const headers={apikey:service,Authorization:"Bearer "+service,"Content-Type":"application/json"};
  let response:Response;
- try{response=await fetch(url+"/rest/v1/rpc/nx_submit_deposit",{method:"POST",headers,body:JSON.stringify({p_user_id:user.id,p_amount:amount,p_network_code:network,p_tx_hash:hash})})}catch{return json({error:"Deposit service unavailable"},503)}
+ try{response=await fetch(url+"/rest/v1/rpc/nx_submit_deposit",{method:"POST",headers,body:JSON.stringify({p_user_id:user.id,p_amount:amount,p_network_code:network,p_tx_hash:hash}),signal:AbortSignal.timeout(15000)})}catch{return json({error:"Deposit service unavailable or timed out. Check submission status before retrying."},503)}
  const data=await response.json().catch(()=>null);
  if(!response.ok) return json({error:typeof data==="string"?data:(data?.message??"Deposit submission failed")},409);
  return json({success:true,submission_id:data,status:"submitted",notice:"Submitted for verification. Your wallet has not been credited."});
