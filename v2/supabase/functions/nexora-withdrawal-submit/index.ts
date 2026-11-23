@@ -17,12 +17,12 @@ Deno.serve(async (req) => {
   const token = bearer.slice(7);
   let auth: Response;
   try {
-    auth = await fetch(url + "/auth/v1/user", { headers: { apikey: anon, Authorization: "Bearer " + token } });
+    auth = await fetch(url + "/auth/v1/user", { headers: { apikey: anon, Authorization: "Bearer " + token }, signal: AbortSignal.timeout(10000) });
   } catch {
     return json({ error: "Authentication service unavailable" }, 503);
   }
   if (!auth.ok) return json({ error: "Invalid or expired session" }, 401);
-  const user = await auth.json();
+  const user = await auth.json().catch(() => null);
   if (!user?.id) return json({ error: "Invalid session user" }, 401);
   let body: { amount?: unknown; destination_address?: unknown; idempotency_key?: unknown; network_code?: unknown };
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON body" }, 400); }
@@ -50,9 +50,14 @@ Deno.serve(async (req) => {
   if (![min,max,feeBps,fixedFee].every(Number.isFinite) || min <= 0 || max < min || feeBps < 0 || feeBps > 10000 || fixedFee < 0) return json({ error: "Withdrawal configuration invalid" }, 500);
   const fee = Math.round((amount * feeBps / 10000 + fixedFee) * 1e6) / 1e6;
   const headers = { apikey: service, Authorization: "Bearer " + service, "Content-Type": "application/json" };
-  const rpc = await fetch(url + "/rest/v1/rpc/nx_request_withdrawal", { method: "POST", headers, body: JSON.stringify({
-    p_user_id: user.id, p_amount: amount, p_fee: fee, p_network_code: network, p_destination_address: address, p_idempotency_key: key
-  })});
+  let rpc: Response;
+  try {
+    rpc = await fetch(url + "/rest/v1/rpc/nx_request_withdrawal", { method: "POST", headers, body: JSON.stringify({
+      p_user_id: user.id, p_amount: amount, p_fee: fee, p_network_code: network, p_destination_address: address, p_idempotency_key: key
+    }), signal: AbortSignal.timeout(15000) });
+  } catch {
+    return json({ error: "Withdrawal service unavailable or timed out. Please retry using the same idempotency key." }, 503);
+  }
   const result = await rpc.json().catch(() => null);
   if (!rpc.ok) {
     const message = typeof result === "string" ? result : (result?.message || result?.details || "Withdrawal request could not be created");
