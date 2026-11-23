@@ -181,11 +181,13 @@ Deno.serve(async (req) => {
       if (userId && !/^[0-9a-f-]{36}$/i.test(userId)) return json({ error: "Invalid user ID" }, 400);
       const allowedTypes = ["deposit_credit","withdrawal_debit","withdrawal_refund","payment_debit","payment_refund","admin_adjustment","transfer_debit","transfer_credit","opening_balance"];
       if (entryType && !allowedTypes.includes(entryType)) return json({ error: "Invalid entry type" }, 400);
-      const filters = ["select=id,user_id,wallet_id,asset_code,amount,entry_type,reference_type,reference_id,metadata,created_at","order=created_at.desc","limit="+pageSize,"offset="+((page-1)*pageSize)];
+      const filters = ["select=id,user_id,wallet_id,asset_code,amount,entry_type,reference_type,reference_id,metadata,created_at","order=created_at.desc,id.desc","limit="+(pageSize+1),"offset="+((page-1)*pageSize)];
       if (userId) filters.push("user_id=eq."+encodeURIComponent(userId));
       if (entryType) filters.push("entry_type=eq."+encodeURIComponent(entryType));
-      const ledger = await query("nx_wallet_ledger", filters.join("&"));
-      return json({ ledger, page, page_size: pageSize, has_more: ledger.length===pageSize });
+      const fetched = await query("nx_wallet_ledger", filters.join("&"));
+      const hasMore = fetched.length > pageSize;
+      const ledger = fetched.slice(0,pageSize);
+      return json({ ledger, page, page_size: pageSize, has_more: hasMore });
     }
     if (action === "audit") {
       const audit = await query("nx_admin_audit_logs", "select=id,admin_user_id,action,target_type,target_id,before_data,after_data,created_at&order=created_at.desc&limit=200");
