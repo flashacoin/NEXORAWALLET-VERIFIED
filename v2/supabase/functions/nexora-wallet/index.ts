@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
   const authUser = await authRes.json();
   if (!authUser?.id) return json({ error: "Invalid session user" }, 401);
 
-  let body: { action?: string };
+  let body: { action?: string; page?: number; page_size?: number };
   try {
     body = await req.json();
   } catch {
@@ -68,8 +68,20 @@ Deno.serve(async (req) => {
       return json({ wallets });
     }
     if (action === "history") {
-      const ledger = await rest("nx_wallet_ledger", `select=id,asset_code,amount,entry_type,reference_type,created_at&user_id=eq.${userId}&order=created_at.desc&limit=100`);
-      return json({ ledger });
+      const page = body.page ?? 1;
+      const pageSize = body.page_size ?? 50;
+      if (!Number.isInteger(page) || page < 1 || page > 10000) {
+        return json({ error: "Invalid history page" }, 400);
+      }
+      if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 100) {
+        return json({ error: "Invalid history page size" }, 400);
+      }
+      const offset = (page - 1) * pageSize;
+      const ledger = await rest(
+        "nx_wallet_ledger",
+        `select=id,asset_code,amount,entry_type,reference_type,created_at&user_id=eq.${userId}&order=created_at.desc,id.desc&limit=${pageSize}&offset=${offset}`,
+      );
+      return json({ ledger, page, page_size: pageSize, has_more: ledger.length === pageSize });
     }
     if (action === "deposits") {
       const deposits = await rest("nx_deposits", `select=id,asset_code,network_code,amount,confirmations,required_confirmations,status,tx_hash,created_at&user_id=eq.${userId}&order=created_at.desc&limit=100`);
