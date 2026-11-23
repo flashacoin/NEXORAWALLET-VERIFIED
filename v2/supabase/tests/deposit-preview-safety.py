@@ -11,7 +11,7 @@ required_preview = [
     "/walletsolidity/gettransactioninfobyid",
     "/walletsolidity/getnowblock",
     "does not match a pending submission",
-    "does not credit a wallet",
+    "or credit a wallet",
 ]
 for marker in required_preview:
     if marker.lower() not in preview.lower():
