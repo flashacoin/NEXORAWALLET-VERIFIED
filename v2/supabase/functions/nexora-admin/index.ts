@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
   const adminIds = adminIdsRaw.split(",").map((v) => v.trim()).filter(Boolean);
   if (!adminIds.includes(userId)) return json({ error: "Administrator access required" }, 403);
 
-  let body: { action?: string; withdrawal_id?: string; reason?: string; tx_hash?: string; review_action?: string };
+  let body: { action?: string; withdrawal_id?: string; reason?: string; tx_hash?: string; review_action?: string; page?: number; page_size?: number; search?: string };
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
   const action = body.action;
 
@@ -137,8 +137,23 @@ Deno.serve(async (req) => {
       return json({ users, wallets, deposits, withdrawals });
     }
     if (action === "users") {
-      const users = await query("profiles", "select=id,email,display_name,created_at&order=created_at.desc&limit=200");
-      return json({ users });
+      const page = Number(body.page ?? 1);
+      const pageSize = Number(body.page_size ?? 50);
+      const search = typeof body.search === "string" ? body.search.trim().slice(0, 120) : "";
+      if (!Number.isInteger(page) || page < 1 || page > 10000) return json({ error: "Invalid page" }, 400);
+      if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 100) return json({ error: "Invalid page size" }, 400);
+      if (search && !/^[a-zA-Z0-9@._+ -]+$/.test(search)) return json({ error: "Search contains unsupported characters" }, 400);
+      const params = ["select=id,email,display_name,created_at","order=created_at.desc,id.desc","limit="+(pageSize+1),"offset="+((page-1)*pageSize)];
+      if (search) {
+        if (/^[0-9a-f-]{36}$/i.test(search)) params.push("id=eq."+encodeURIComponent(search));
+        else params.push("or=(email.ilike.*"+encodeURIComponent(search)+"*,display_name.ilike.*"+encodeURIComponent(search)+"*)");
+      }
+      const fetched = await query("profiles", params.join("&"));
+      const hasMore = fetched.length > pageSize;
+      const users = fetched.slice(0,pageSize);
+      const ids = users.map((u: {id:string}) => u.id).filter((id: string) => /^[0-9a-f-]{36}$/i.test(id));
+      const wallets = ids.length ? await query("wallets", "select=id,user_id,asset_code,balance,updated_at&user_id=in.("+ids.map(encodeURIComponent).join(",")+")&order=asset_code.asc") : [];
+      return json({ users, wallets, page, page_size: pageSize, has_more: hasMore });
     }
     if (action === "deposits") {
       const deposits = await query("nx_deposits", "select=*&order=created_at.desc&limit=200");
