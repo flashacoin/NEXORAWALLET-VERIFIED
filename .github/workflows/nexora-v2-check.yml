@@ -28,6 +28,7 @@ jobs:
           deno check v2/supabase/functions/nexora-withdrawal-submit/index.ts
           deno check v2/supabase/functions/nexora-admin/nexora-withdrawal-verifier.ts
           deno test v2/supabase/functions/nexora-admin/nexora-withdrawal-verifier_test.ts
+          deno check v2/supabase/functions/nexora-deposit-settle/index.ts
           deno check v2/supabase/functions/nexora-deposit-verify-preview/index.ts
           deno check v2/supabase/functions/nexora-deposit-verify-preview/tron-usdt-transfer.ts
           deno test v2/supabase/functions/nexora-deposit-verify-preview/tron-usdt-transfer_test.ts
@@ -161,6 +162,7 @@ jobs:
       - name: Enforce deposit preview remains read-only
         run: |
           python3 v2/supabase/tests/deposit-preview-safety.py
+          python3 v2/supabase/tests/deposit-settlement-safety.py
       - name: Assert CSV formula protection exists in both exports
         run: |
           python3 - <<'PY'

@@ -17,7 +17,8 @@ create table public.wallets (
   id uuid primary key,
   user_id uuid not null,
   asset_code text not null,
-  balance numeric(30,10) not null
+  balance numeric(30,10) not null,
+  updated_at timestamptz not null default now()
 );
 
 insert into auth.users(id) values
@@ -27,6 +28,7 @@ insert into auth.users(id) values
 insert into public.wallets(id,user_id,asset_code,balance) values
  ('00000000-0000-0000-0000-000000000301','10000000-0000-0000-0000-000000000301','USDT',42);
 
+\i v2/supabase/migrations/001_wallet_ledger.sql
 \i v2/supabase/migrations/008_deposit_submission_queue.sql
 \i v2/supabase/migrations/013_deposit_verification_evidence.sql
 
@@ -34,6 +36,7 @@ insert into public.wallets(id,user_id,asset_code,balance) values
 insert into public.nx_deposit_submissions(user_id,asset_code,network_code,amount,tx_hash,status)
 values ('10000000-0000-0000-0000-000000000301','USDT','TRON-TRC20',0.00000001,repeat('e',64),'submitted');
 \i v2/supabase/migrations/014_usdt_deposit_six_decimal_precision.sql
+\i v2/supabase/migrations/016_atomic_deposit_settlement.sql
 
 DO $$
 begin
@@ -50,6 +53,7 @@ declare
   v_evidence jsonb;
   v_count integer;
   v_balance numeric;
+  v_settlement jsonb;
   v_hash text := repeat('b',64);
 begin
   v_id := public.nx_submit_deposit(
@@ -190,7 +194,67 @@ begin
     if v_count <> 0 then raise exception 'FAIL: evidence recording created ledger entry'; end if;
   end if;
 
-  raise notice 'PASS: exact deposit evidence matching, immutable storage, idempotent retry, and no-credit invariants';
+  begin
+    perform public.nx_settle_verified_deposit(v_id,(v_evidence->>'evidence_id')::uuid,
+      'TWrongContract','TConfiguredDeposit',20);
+    raise exception 'FAIL: wrong token contract was settled';
+  exception when others then
+    if sqlerrm <> 'deposit verification evidence does not meet settlement policy' then raise; end if;
+  end;
+  begin
+    perform public.nx_settle_verified_deposit(v_id,(v_evidence->>'evidence_id')::uuid,
+      'TOfficialUSDT','TWrongRecipient',20);
+    raise exception 'FAIL: wrong recipient was settled';
+  exception when others then
+    if sqlerrm <> 'deposit verification evidence does not meet settlement policy' then raise; end if;
+  end;
+  begin
+    perform public.nx_settle_verified_deposit(v_id,(v_evidence->>'evidence_id')::uuid,
+      'TOfficialUSDT','TConfiguredDeposit',21);
+    raise exception 'FAIL: under-confirmed evidence was settled';
+  exception when others then
+    if sqlerrm <> 'deposit verification evidence does not meet settlement policy' then raise; end if;
+  end;
+
+  v_settlement := public.nx_settle_verified_deposit(v_id,(v_evidence->>'evidence_id')::uuid,
+    'TOfficialUSDT','TConfiguredDeposit',20);
+  if v_settlement->>'settled' <> 'true' or v_settlement->>'duplicate_retry' <> 'false' then
+    raise exception 'FAIL: valid verified deposit did not settle';
+  end if;
+  select balance into v_balance from public.wallets
+    where user_id='10000000-0000-0000-0000-000000000301';
+  if v_balance <> 54.5 then raise exception 'FAIL: wallet not credited exactly once, got %',v_balance; end if;
+  select count(*) into v_count from public.nx_wallet_ledger
+    where reference_id=(v_settlement->>'deposit_id')::uuid and entry_type='deposit_credit';
+  if v_count <> 1 then raise exception 'FAIL: expected exactly one deposit credit ledger entry'; end if;
+  select count(*) into v_count from public.nx_deposits
+    where id=(v_settlement->>'deposit_id')::uuid and status='credited'
+      and ledger_id=(v_settlement->>'ledger_id')::uuid
+      and verification_evidence_id=(v_evidence->>'evidence_id')::uuid;
+  if v_count <> 1 then raise exception 'FAIL: credited deposit record is incomplete'; end if;
+  if (select status from public.nx_deposit_submissions where id=v_id) <> 'credited' then
+    raise exception 'FAIL: submission was not marked credited';
+  end if;
+
+  v_settlement := public.nx_settle_verified_deposit(v_id,(v_evidence->>'evidence_id')::uuid,
+    'TOfficialUSDT','TConfiguredDeposit',20);
+  if v_settlement->>'duplicate_retry' <> 'true' then raise exception 'FAIL: retry not idempotent'; end if;
+  select balance into v_balance from public.wallets
+    where user_id='10000000-0000-0000-0000-000000000301';
+  select count(*) into v_count from public.nx_wallet_ledger
+    where reference_id=(v_settlement->>'deposit_id')::uuid and entry_type='deposit_credit';
+  if v_balance <> 54.5 or v_count <> 1 then
+    raise exception 'FAIL: retry changed balance or duplicated ledger';
+  end if;
+  if has_function_privilege('authenticated',
+       'public.nx_settle_verified_deposit(uuid,uuid,text,text,integer)','execute') then
+    raise exception 'FAIL: authenticated role can execute settlement RPC';
+  end if;
+  select count(*) into v_count from public.nx_admin_audit_logs
+    where action='deposit_credited_by_verified_evidence' and target_id=(v_settlement->>'deposit_id');
+  if v_count <> 1 then raise exception 'FAIL: settlement audit missing or duplicated'; end if;
+
+  raise notice 'PASS: evidence matching, immutable storage, atomic exactly-once settlement, policy enforcement, audit, and retry safety';
 end $$;
 
 rollback;
