@@ -62,9 +62,13 @@ jobs:
                   "ledger_refund_id is null",
                   "v_w.status <> 'processing'",
                   "transaction hash already used",
+                  "auth.role(),'') <> 'service_role'",
+              ],
+              "v2/supabase/migrations/015_withdrawal_chain_verification.sql": [
                   "verified on-chain withdrawal evidence required",
                   "nx_withdrawal_verification_evidence",
-                  "auth.role(),'') <> 'service_role'",
+                  "unique(network_code, tx_hash, event_index)",
+                  "before update or delete",
               ],
               "v2/supabase/functions/nexora-admin/index.ts": [
                   "Bearer ",
