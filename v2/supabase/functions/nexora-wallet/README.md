@@ -9,7 +9,7 @@ Send a POST request with a Supabase Auth access token in the Authorization heade
 
 JSON body:
 - `{"action":"wallet"}` — authenticated user's wallet rows
-- `{"action":"history"}` — last 100 ledger entries for that user
+- `{"action":"history"}` — paginated ledger history for that user. Optional `page` (default 1) and `page_size` (default 50, maximum 100) are supported. The response includes `page`, `page_size`, and `has_more`. Results are ordered newest first with a stable ID tie-breaker.
 - `{"action":"deposits"}` — last 100 deposit records for that user
 - `{"action":"withdrawals"}` — last 100 withdrawal records for that user
 
