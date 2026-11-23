@@ -18,9 +18,14 @@ Deno.serve(async (req) => {
 
   const bearer = req.headers.get("Authorization") ?? "";
   if (!bearer.startsWith("Bearer ")) return json({ error: "Authentication required" }, 401);
-  const auth = await fetch(url + "/auth/v1/user", { headers: { apikey: anon, Authorization: bearer } });
+  let auth: Response;
+  try {
+    auth = await fetch(url + "/auth/v1/user", { headers: { apikey: anon, Authorization: bearer }, signal: AbortSignal.timeout(10000) });
+  } catch {
+    return json({ error: "Authentication service unavailable or timed out" }, 503);
+  }
   if (!auth.ok) return json({ error: "Invalid or expired session" }, 401);
-  const user = await auth.json();
+  const user = await auth.json().catch(() => null);
   const adminId = user?.id;
   if (!adminId || !allowlist.split(",").map((s) => s.trim()).includes(adminId))
     return json({ error: "Administrator access required" }, 403);
@@ -29,7 +34,7 @@ Deno.serve(async (req) => {
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
   const headers = { apikey: service, Authorization: "Bearer " + service, "Content-Type": "application/json" };
   const rest = async (path: string, init?: RequestInit) => {
-    const r = await fetch(url + path, { ...init, headers: { ...headers, ...(init?.headers ?? {}) } });
+    const r = await fetch(url + path, { ...init, headers: { ...headers, ...(init?.headers ?? {}) }, signal: AbortSignal.timeout(15000) });
     const raw = await r.text();
     if (!r.ok) throw new Error("Admin withdrawal request failed");
     return raw ? JSON.parse(raw) : null;
