@@ -3,7 +3,7 @@ import { usdtAmountToBaseUnits, validateUsdtTransfer, type NormalizedTransferEvi
 
 const hash = "a".repeat(64);
 const evidence: NormalizedTransferEvidence = {
-  transactionId: hash, contractAddress: "TOfficialContractConfiguredByServer",
+  transactionId: hash, blockNumber: 100, contractAddress: "TOfficialContractConfiguredByServer",
   eventName: "Transfer", eventIndex: 0, from: "TSender",
   to: "TDepositAddressConfiguredByServer", value: "1234567",
   receiptResult: "SUCCESS", confirmations: 20,
@@ -109,6 +109,7 @@ Deno.test("normalizes solidified receipt Transfer logs for validator input", asy
   );
   assertEquals(normalized.length, 1);
   assertEquals(normalized[0].transactionId, hash);
+  assertEquals(normalized[0].blockNumber, 100);
   assertEquals(normalized[0].contractAddress, tetherAddress);
   assertEquals(normalized[0].eventName, "Transfer");
   assertEquals(normalized[0].eventIndex, 0);

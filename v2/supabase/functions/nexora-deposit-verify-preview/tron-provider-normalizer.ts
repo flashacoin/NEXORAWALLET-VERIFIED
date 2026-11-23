@@ -133,6 +133,7 @@ export async function normalizeSolidifiedTransferLogs(
     const amount = BigInt("0x" + log.data.replace(/^0x/i, "")).toString(10);
     evidence.push({
       transactionId: data.id,
+      blockNumber,
       contractAddress: await tronHexToAddress(canonicalContractHex),
       eventName: "Transfer",
       eventIndex: index,

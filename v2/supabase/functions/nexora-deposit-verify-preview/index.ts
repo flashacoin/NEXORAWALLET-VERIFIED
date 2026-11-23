@@ -1,5 +1,5 @@
 // NEXORA V2 deposit verification preview.
-// Evidence validation only: this endpoint never credits balances or changes database state.
+// Persists immutable matched evidence only. Never credits balances or changes submission status.
 import { validateUsdtTransfer } from "./tron-usdt-transfer.ts";
 import { normalizeSolidifiedTransferLogs, tronAddressToHex } from "./tron-provider-normalizer.ts";
 
@@ -36,6 +36,7 @@ Deno.serve(async (req) => {
 
   const url = Deno.env.get("SUPABASE_URL");
   const anon = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+  const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const admins = (Deno.env.get("NEXORA_ADMIN_USER_IDS") ?? "").split(",").map((x) => x.trim()).filter(Boolean);
   const gridKey = Deno.env.get("TRONGRID_API_KEY");
   const depositAddress = Deno.env.get("NEXORA_DEPOSIT_ADDRESS");
@@ -43,7 +44,7 @@ Deno.serve(async (req) => {
   const minConfirmations = Number(Deno.env.get("NEXORA_DEPOSIT_CONFIRMATIONS") ?? "");
   const tronGridBase = (Deno.env.get("TRONGRID_BASE_URL") ?? "https://api.trongrid.io").replace(/\/+$/, "");
 
-  if (!url || !anon || !admins.length || !gridKey || !depositAddress || !usdtContract ||
+  if (!url || !anon || !service || !admins.length || !gridKey || !depositAddress || !usdtContract ||
       !Number.isSafeInteger(minConfirmations) || minConfirmations < 1) {
     return json({ error: "Deposit verification is not configured" }, 503);
   }
@@ -75,8 +76,6 @@ Deno.serve(async (req) => {
   if (!/^[a-f0-9]{64}$/.test(hash)) return json({ error: "Invalid transaction hash" }, 400);
 
   try {
-    // SolidityNode receipt is returned only for solidified transactions. The separate
-    // solidified head supplies a conservative confirmation count for the existing policy.
     const [receipt, solidifiedHead] = await Promise.all([
       providerPost(tronGridBase, "/walletsolidity/gettransactioninfobyid", gridKey, { value: hash }),
       providerPost(tronGridBase, "/walletsolidity/getnowblock", gridKey, {}),
@@ -89,7 +88,7 @@ Deno.serve(async (req) => {
       return json({
         verification_status: "manual_review_required",
         tx_hash: hash,
-        validated_transfers: [],
+        matched_evidence: [],
         warning: "No solidified transaction receipt was found. No deposit has been verified or credited.",
       });
     }
@@ -97,24 +96,71 @@ Deno.serve(async (req) => {
     const normalized = await normalizeSolidifiedTransferLogs(
       receipt, hash, usdtContract, minConfirmations, solidifiedHeight,
     );
-    const validated = normalized.map((evidence) => {
+    const matchedEvidence: Array<{ evidence_id: string; event_index: number; amount_base_units: string; duplicate_retry: boolean }> = [];
+    const unmatchedTransfers: Array<{ event_index: number; reason: string }> = [];
+    const rejectedTransfers: Array<{ event_index: number; reason: string }> = [];
+
+    // Sequential calls preserve deterministic matching and idempotent retries.
+    for (const evidence of normalized) {
       const result = validateUsdtTransfer(evidence, {
         transactionId: hash,
         contractAddress: usdtContract,
         recipientAddress: depositAddress,
         minimumConfirmations: minConfirmations,
       });
-      return result.ok
-        ? { valid: true, evidence: result.evidence }
-        : { valid: false, event_index: evidence.eventIndex, reason: result.reason };
-    });
+      if (!result.ok) {
+        rejectedTransfers.push({ event_index: evidence.eventIndex, reason: result.reason });
+        continue;
+      }
+
+      const rpcResponse = await fetch(url + "/rest/v1/rpc/nx_record_deposit_evidence", {
+        method: "POST",
+        headers: {
+          apikey: service,
+          Authorization: "Bearer " + service,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          p_tx_hash: hash,
+          p_event_index: evidence.eventIndex,
+          p_token_contract_address: evidence.contractAddress,
+          p_sender_address: evidence.from,
+          p_recipient_address: evidence.to,
+          p_amount_base_units: evidence.value,
+          p_block_number: evidence.blockNumber,
+          p_confirmations: evidence.confirmations,
+          p_receipt_result: evidence.receiptResult,
+          p_verifier_version: "tron-solidified-v1",
+        }),
+        signal: AbortSignal.timeout(12_000),
+      });
+      const rpcResult = await rpcResponse.json().catch(() => null);
+      if (!rpcResponse.ok || !rpcResult || typeof rpcResult !== "object") {
+        return json({ error: "Validated evidence could not be safely recorded; no deposit was credited." }, 503);
+      }
+      if (rpcResult.matched === true && typeof rpcResult.evidence_id === "string") {
+        matchedEvidence.push({
+          evidence_id: rpcResult.evidence_id,
+          event_index: evidence.eventIndex,
+          amount_base_units: evidence.value,
+          duplicate_retry: rpcResult.duplicate_retry === true,
+        });
+      } else {
+        unmatchedTransfers.push({
+          event_index: evidence.eventIndex,
+          reason: typeof rpcResult.reason === "string" ? rpcResult.reason : "submission_not_matched",
+        });
+      }
+    }
+
     return json({
       verification_status: "manual_review_required",
       tx_hash: hash,
       solidified_block_height: solidifiedHeight,
-      validated_transfers: validated.filter((item) => item.valid),
-      rejected_transfer_count: validated.filter((item) => !item.valid).length,
-      warning: "On-chain transfer evidence was checked against server configuration. This preview does not match a pending submission, create a verification record, approve a deposit, or credit a wallet. Manual review is still required.",
+      matched_evidence: matchedEvidence,
+      unmatched_transfers: unmatchedTransfers,
+      rejected_transfers: rejectedTransfers,
+      warning: "Matched evidence is immutable and recorded for manual review only. Submission status, deposits, ledger entries, and wallet balances are unchanged; no deposit has been credited.",
     });
   } catch {
     return json({ error: "TRON verification provider unavailable or returned invalid evidence" }, 503);

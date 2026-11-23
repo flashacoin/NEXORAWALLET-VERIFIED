@@ -3,6 +3,7 @@
 // Callers must normalize provider responses and independently establish finality.
 export type NormalizedTransferEvidence = {
   transactionId: string;
+  blockNumber: number;
   contractAddress: string;
   eventName: string;
   eventIndex: number;
