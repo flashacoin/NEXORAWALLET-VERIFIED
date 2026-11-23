@@ -61,7 +61,7 @@ export async function verifyTelegramInitData(
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) => key + "=" + value)
     .join("\n");
-  const secretKey = await hmac(encoder.encode("WebAppData"), botToken);
+  const secretKey = await hmac(encoder.encode(botToken), "WebAppData");
   const calculatedHash = toHex(await hmac(secretKey, dataCheckString));
   if (!constantTimeEqual(calculatedHash, receivedHash)) {
     throw new Error("invalid_telegram_signature");
