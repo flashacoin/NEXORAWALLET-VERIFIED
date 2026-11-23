@@ -14,7 +14,7 @@ Deno.serve(async(req)=>{
  const user=await auth.json(); if(!user?.id) return json({error:"Invalid user"},401);
  let body:any; try{body=await req.json()}catch{return json({error:"Invalid JSON"},400)}
  const amount=Number(body?.amount), network=body?.network_code??"TRON-TRC20", hash=typeof body?.tx_hash==="string"?body.tx_hash.trim():"";
- if(!Number.isFinite(amount)||amount<=0||amount!==Math.round(amount*1e8)/1e8) return json({error:"Amount must be positive with up to 8 decimals"},400);
+ if(!Number.isFinite(amount)||amount<=0||amount!==Math.round(amount*1e6)/1e6) return json({error:"Amount must be positive with up to 6 USDT decimals"},400);
  if(network!=="TRON-TRC20") return json({error:"Unsupported network"},400);
  if(!/^[A-Fa-f0-9]{64}$/.test(hash)) return json({error:"Invalid transaction hash format"},400);
  const headers={apikey:service,Authorization:"Bearer "+service,"Content-Type":"application/json"};
