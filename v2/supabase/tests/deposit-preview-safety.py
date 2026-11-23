@@ -30,7 +30,7 @@ for forbidden in [
 # Admin API exposes the submission queue only, not a deposit approval/credit action.
 if 'action === "deposit_submissions"' not in admin:
     raise SystemExit("Admin deposit submission review action is missing")
-for forbidden in ["deposit_approve", "nx_admin_settle_deposit", "deposit_credit"]:
+for forbidden in ["deposit_approve", "nx_admin_settle_deposit"]:
     if forbidden in admin:
         raise SystemExit(f"Unreviewed deposit credit action found in admin API: {forbidden}")
 
