@@ -4,7 +4,7 @@ import { normalizeSolidifiedTransferLogs } from "../nexora-deposit-verify-previe
 import { validateUsdtTransfer, type NormalizedTransferEvidence } from "../nexora-deposit-verify-preview/tron-usdt-transfer.ts";
 
 export function withdrawalAmountToBaseUnits(amount: string): string | null {
-  const match = /^(0|[1-9][0-9]*)(?:\\.([0-9]{1,10}))?$/.exec(amount);
+  const match = /^(0|[1-9][0-9]*)(?:\.([0-9]{1,10}))?$/.exec(amount);
   if (!match) return null;
   const fraction = match[2] ?? "";
   if (fraction.length > 6 && /[1-9]/.test(fraction.slice(6))) return null;
