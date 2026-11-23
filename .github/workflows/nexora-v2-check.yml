@@ -50,6 +50,24 @@ jobs:
               parse_sql(path.read_text())
               print(f"SQL syntax OK: {path}")
           PY
+      - name: Verify security hardening migration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          sql = Path("v2/supabase/migrations/018_security_and_fk_indexes.sql").read_text().lower()
+          required = [
+              "revoke execute on function public.handle_new_wallet_user() from public, anon, authenticated",
+              "create index if not exists deposit_requests_user_id_idx",
+              "create index if not exists notifications_user_id_idx",
+              "create index if not exists transaction_ledger_user_id_idx",
+              "create index if not exists transaction_ledger_wallet_id_idx",
+              "create index if not exists withdrawal_requests_user_id_idx",
+          ]
+          for item in required:
+              if item not in sql:
+                  raise SystemExit(f"Missing hardening safeguard: {item}")
+          print("Security and foreign-key index migration assertions OK")
+          PY
       - name: Assert critical wallet safety guards remain present
         run: |
           python3 - <<'PY'
