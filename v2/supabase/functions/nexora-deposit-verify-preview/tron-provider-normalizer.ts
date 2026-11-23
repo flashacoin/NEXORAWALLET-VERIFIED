@@ -8,7 +8,9 @@ const TRANSFER_TOPIC = "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4d
 const HEX = /^[0-9a-f]+$/i;
 
 async function sha256(bytes: Uint8Array): Promise<Uint8Array> {
-  return new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+  const input = new Uint8Array(bytes.byteLength);
+  input.set(bytes);
+  return new Uint8Array(await crypto.subtle.digest("SHA-256", input.buffer));
 }
 
 function concat(a: Uint8Array, b: Uint8Array): Uint8Array {
