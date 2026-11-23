@@ -127,6 +127,40 @@ begin
   exception when others then
     if sqlerrm <> 'verified on-chain withdrawal evidence required' then raise; end if;
   end;
+  -- Evidence must match the requested recipient, exact payout, and successful receipt.
+  begin
+    perform public.nx_record_withdrawal_evidence(
+      v_id,v_hash,0,'TUSDTContractAddress','TSenderAddress','TWrongRecipientAddress','10000000',123456,20,'SUCCESS','test-verifier'
+    );
+    raise exception 'FAIL: wrong withdrawal recipient evidence was accepted';
+  exception when others then
+    if sqlerrm <> 'withdrawal recipient mismatch' then raise; end if;
+  end;
+  begin
+    perform public.nx_record_withdrawal_evidence(
+      v_id,v_hash,0,'TUSDTContractAddress','TSenderAddress',v_address,'9000000',123456,20,'SUCCESS','test-verifier'
+    );
+    raise exception 'FAIL: short withdrawal payout evidence was accepted';
+  exception when others then
+    if sqlerrm <> 'withdrawal payout amount mismatch' then raise; end if;
+  end;
+  begin
+    perform public.nx_record_withdrawal_evidence(
+      v_id,v_hash,0,'TUSDTContractAddress','TSenderAddress',v_address,'10000000',123456,20,'FAILED','test-verifier'
+    );
+    raise exception 'FAIL: failed receipt evidence was accepted';
+  exception when others then
+    if sqlerrm <> 'invalid withdrawal evidence' then raise; end if;
+  end;
+  begin
+    perform public.nx_record_withdrawal_evidence(
+      v_id,v_hash,0,'TUSDTContractAddress','TSenderAddress',v_address,'10000000',123456,0,'SUCCESS','test-verifier'
+    );
+    raise exception 'FAIL: zero-confirmation evidence was accepted';
+  exception when others then
+    if sqlerrm <> 'invalid withdrawal evidence' then raise; end if;
+  end;
+
   -- A verified transfer must pay the full requested amount (10 USDT); the 1 USDT fee is on top.
   perform public.nx_record_withdrawal_evidence(
     v_id,v_hash,0,'TUSDTContractAddress','TSenderAddress',v_address,'10000000',123456,20,'SUCCESS','test-verifier'
