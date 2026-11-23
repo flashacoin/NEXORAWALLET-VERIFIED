@@ -61,7 +61,7 @@ async function load(){
    const balances=(byUser.get(u.id)||[]).map(w=>'<span class="balance">'+esc(w.asset_code)+': <b>'+fmt(w.balance)+'</b></span>').join(" ");
    return '<tr><td><b>'+esc(u.email||"No email")+'</b><small>'+esc(u.id)+'</small></td><td>'+esc(u.display_name||"—")+'</td><td>'+(balances||'<span class="muted">No wallet rows</span>')+'</td><td>'+esc(u.created_at?new Date(u.created_at).toLocaleString():"—")+'</td></tr>';
   }).join("")||'<tr><td colspan="4" class="muted">No users found.</td></tr>';
-  hasMore===Boolean(data.has_more);hasMore=Boolean(data.has_more);
+  hasMore=Boolean(data.has_more);
   $("pageInfo").textContent="Page "+page+" · "+users.length+" users shown"+(searchTerm?" · filtered":"");
   $("previous").disabled=page<=1;$("next").disabled=!hasMore;
   $("message").textContent="Administrator verified. Loaded "+users.length+" user records.";
