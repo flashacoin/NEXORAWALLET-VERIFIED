@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
         const gridKey = Deno.env.get("TRONGRID_API_KEY");
         const tokenContract = Deno.env.get("NEXORA_USDT_CONTRACT");
         const minConfirmations = Number(Deno.env.get("NEXORA_WITHDRAWAL_CONFIRMATIONS") ?? "");
-        const tronGridBase = (Deno.env.get("TRONGRID_BASE_URL") ?? "https://api.trongrid.io").replace(/\\/+$/, "");
+        const tronGridBase = (Deno.env.get("TRONGRID_BASE_URL") ?? "https://api.trongrid.io").replace(/\/+$/, "");
         if (!gridKey || !tokenContract || !Number.isSafeInteger(minConfirmations) || minConfirmations < 1) {
           return json({ error: "Withdrawal chain verification is not configured; request remains in processing." }, 503);
         }
