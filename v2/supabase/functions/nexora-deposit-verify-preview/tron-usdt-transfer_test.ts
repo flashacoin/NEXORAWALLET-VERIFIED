@@ -56,3 +56,24 @@ Deno.test("converts decimal USDT to integer base units exactly", () => {
   assertEquals(usdtAmountToBaseUnits("0"), null);
   assertEquals(usdtAmountToBaseUnits("-1"), null);
 });
+
+Deno.test("rejects invalid minimum confirmation policy", () => {
+  assertEquals(reasonOf(validateUsdtTransfer(evidence, { ...expected, minimumConfirmations: 0 })), "insufficient_confirmations");
+  assertEquals(reasonOf(validateUsdtTransfer(evidence, { ...expected, minimumConfirmations: -1 })), "insufficient_confirmations");
+});
+Deno.test("rejects malformed event index and negative confirmations", () => {
+  assertEquals(reasonOf(validateUsdtTransfer({ ...evidence, eventIndex: 0.5 }, expected)), "invalid_event_index");
+  assertEquals(reasonOf(validateUsdtTransfer({ ...evidence, confirmations: -1 }, expected)), "insufficient_confirmations");
+});
+Deno.test("rejects missing sender or recipient", () => {
+  assertEquals(reasonOf(validateUsdtTransfer({ ...evidence, from: "" }, expected)), "recipient_mismatch");
+  assertEquals(reasonOf(validateUsdtTransfer({ ...evidence, to: "" }, expected)), "recipient_mismatch");
+});
+Deno.test("rejects malformed expected amount", () => {
+  assertEquals(reasonOf(validateUsdtTransfer(evidence, { ...expected, expectedAmountBaseUnits: "1.2" })), "amount_mismatch");
+});
+Deno.test("supports large integer base-unit amounts without floating point", () => {
+  const large = "999999999999999999999999999";
+  assertEquals(validateUsdtTransfer({ ...evidence, value: large }, { ...expected, expectedAmountBaseUnits: large }).ok, true);
+  assertEquals(usdtAmountToBaseUnits("999999999999999999.999999"), "999999999999999999999999");
+});
