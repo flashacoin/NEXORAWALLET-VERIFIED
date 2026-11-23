@@ -70,7 +70,7 @@ async function load(){
  finally{busy=false;}
 }
 $("login").onclick=async()=>{const email=$("email").value.trim(),password=$("password").value;if(!email||!password){$("message").textContent="Enter your admin email and password.";return;}$("message").textContent="Signing in…";const {data,error}=await client.auth.signInWithPassword({email,password});if(error){$("message").textContent=error.message;return;}session=data.session;$("logout").hidden=false;page=1;await load();};
-$("logout").onclick=async()=>{await client.auth.signOut();session=null;$("logout").hidden=true;$("access").textContent="ADMIN AUTH REQUIRED";$("rows").innerHTML='<tr><td colspan="4" class="muted">Sign in to load users.</td></tr>';$("message").textContent="Signed out.";};
+$("logout").onclick=async()=>{try{await client.auth.signOut();}finally{session=null;hasMore=false;page=1;searchTerm="";$("search").value="";$("email").value="";$("password").value="";$("logout").hidden=true;$("previous").disabled=true;$("next").disabled=true;$("pageInfo").textContent="Page —";$("access").textContent="ADMIN AUTH REQUIRED";$("rows").innerHTML='<tr><td colspan="4" class="muted">Sign in to load users.</td></tr>';$("message").textContent="Signed out. User data cleared from this screen.";}};
 $("find").onclick=()=>{searchTerm=$("search").value.trim();page=1;load();};
 $("search").addEventListener("keydown",e=>{if(e.key==="Enter")$("find").click();});
 $("clear").onclick=()=>{$("search").value="";searchTerm="";page=1;load();};
