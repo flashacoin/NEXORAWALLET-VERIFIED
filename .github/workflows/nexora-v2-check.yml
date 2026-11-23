@@ -2,7 +2,7 @@ name: NEXORA V2 Edge Function Checks
 
 on:
   push:
-    branches: [nexora-v2]
+    branches: [nexora-v2, nexora-v2-deposit-dev]
     paths:
       - "v2/**"
       - ".github/workflows/nexora-v2-check.yml"
