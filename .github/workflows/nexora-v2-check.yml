@@ -26,6 +26,8 @@ jobs:
           deno check v2/supabase/functions/nexora-admin/index.ts
           deno check v2/supabase/functions/nexora-deposit-submit/index.ts
           deno check v2/supabase/functions/nexora-withdrawal-submit/index.ts
+          deno check v2/supabase/functions/nexora-admin/nexora-withdrawal-verifier.ts
+          deno test v2/supabase/functions/nexora-admin/nexora-withdrawal-verifier_test.ts
           deno check v2/supabase/functions/nexora-deposit-verify-preview/index.ts
           deno check v2/supabase/functions/nexora-deposit-verify-preview/tron-usdt-transfer.ts
           deno test v2/supabase/functions/nexora-deposit-verify-preview/tron-usdt-transfer_test.ts
@@ -60,6 +62,8 @@ jobs:
                   "ledger_refund_id is null",
                   "v_w.status <> 'processing'",
                   "transaction hash already used",
+                  "verified on-chain withdrawal evidence required",
+                  "nx_withdrawal_verification_evidence",
                   "auth.role(),'') <> 'service_role'",
               ],
               "v2/supabase/functions/nexora-admin/index.ts": [
@@ -67,6 +71,9 @@ jobs:
                   "NEXORA_ADMIN_USER_IDS",
                   "Administrator access required",
                   "withdrawal_complete",
+                  "verifyWithdrawalTransfer",
+                  "nx_record_withdrawal_evidence",
+                  "NEXORA_WITHDRAWAL_CONFIRMATIONS",
                   "Invalid TRON transaction hash",
               ],
               "v2/supabase/functions/nexora-deposit-submit/index.ts": [

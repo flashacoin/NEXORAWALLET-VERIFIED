@@ -68,6 +68,7 @@ insert into public.wallets(id,user_id,asset_code,balance) values
 \i v2/supabase/migrations/005_atomic_withdrawal_request.sql
 \i v2/supabase/migrations/010_withdrawal_idempotency_concurrency.sql
 \i v2/supabase/migrations/006_admin_withdrawal_review.sql
+\i v2/supabase/migrations/015_withdrawal_chain_verification.sql
 
 select set_config('request.jwt.claim.role','service_role',true);
 
@@ -116,20 +117,34 @@ begin
   select count(*) into v_count from public.nx_wallet_ledger where reference_id=v_id;
   if v_count <> 2 then raise exception 'FAIL: rejection retry duplicated refund'; end if;
 
-  -- Approval moves the withdrawal to processing; recording a verified-format hash completes it.
+  -- Approval moves the withdrawal to processing; a hash alone must not complete it.
   v_id := public.nx_request_withdrawal(v_user,10,1,'TRON-TRC20',v_address,'withdraw-test-0002');
   v_w := public.nx_admin_review_withdrawal(v_id,v_admin,'approve',null);
   if v_w.status <> 'processing' then raise exception 'FAIL: approval did not move withdrawal to processing'; end if;
+  begin
+    perform public.nx_admin_complete_withdrawal(v_id,v_admin,v_hash);
+    raise exception 'FAIL: hash without verified evidence completed withdrawal';
+  exception when others then
+    if sqlerrm <> 'verified on-chain withdrawal evidence required' then raise; end if;
+  end;
+  -- A verified transfer must pay the full requested amount (10 USDT); the 1 USDT fee is on top.
+  perform public.nx_record_withdrawal_evidence(
+    v_id,v_hash,0,'TUSDTContractAddress','TSenderAddress',v_address,'10000000',123456,20,'SUCCESS','test-verifier'
+  );
   v_w := public.nx_admin_complete_withdrawal(v_id,v_admin,v_hash);
   if v_w.status <> 'completed' or lower(v_w.tx_hash) <> v_hash then
-    raise exception 'FAIL: withdrawal completion did not persist transaction hash';
+    raise exception 'FAIL: evidence-backed withdrawal completion did not persist transaction hash';
   end if;
   v_w := public.nx_admin_complete_withdrawal(v_id,v_admin,v_hash);
-  if v_w.status <> 'completed' then raise exception 'FAIL: completion retry was not idempotent'; end if;
+  if v_w.status <> 'completed' then raise exception 'FAIL: evidence-backed completion retry was not idempotent'; end if;
 
   -- A transaction hash already used by another withdrawal cannot complete a second payout.
   v_id := public.nx_request_withdrawal(v_user,5,1,'TRON-TRC20',v_address,'withdraw-test-0003');
   v_w := public.nx_admin_review_withdrawal(v_id,v_admin,'approve',null);
+  -- A second distinct event from the same transaction hash cannot be reused for another withdrawal.
+  perform public.nx_record_withdrawal_evidence(
+    v_id,v_hash,1,'TUSDTContractAddress','TSenderAddress',v_address,'5000000',123456,20,'SUCCESS','test-verifier'
+  );
   begin
     perform public.nx_admin_complete_withdrawal(v_id,v_admin,v_hash);
     raise exception 'FAIL: duplicate payout transaction hash was accepted';
@@ -137,7 +152,15 @@ begin
     if sqlerrm <> 'transaction hash already used' then raise; end if;
   end;
 
-  raise notice 'PASS: withdrawal reserve, idempotency, changed details, rejection refund, approval, completion, and duplicate-hash checks';
+  -- Amounts that cannot be represented by six-decimal TRC20 USDT are rejected.
+  begin
+    perform public.nx_request_withdrawal(v_user,1.0000001,0,'TRON-TRC20',v_address,'withdraw-test-precision');
+    raise exception 'FAIL: seven-decimal withdrawal amount was accepted';
+  exception when others then
+    if sqlerrm <> 'withdrawal amount must use at most six decimal places' then raise; end if;
+  end;
+
+  raise notice 'PASS: withdrawal reserve, idempotency, changed details, rejection refund, approval, evidence-required completion, exact full payout, duplicate-hash, and six-decimal precision checks';
 end $$;
 
 rollback;

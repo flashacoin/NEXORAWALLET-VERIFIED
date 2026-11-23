@@ -1,3 +1,5 @@
+import { verifyWithdrawalTransfer, withdrawalAmountToBaseUnits } from "./nexora-withdrawal-verifier.ts";
+import { tronAddressToHex } from "../nexora-deposit-verify-preview/tron-provider-normalizer.ts";
 // NEXORA Wallet V2 Admin API — authenticated admin endpoint.
 // Read actions plus withdrawal review RPCs (approve/reject/record manual payout).
 // This endpoint does not broadcast or transfer funds.
@@ -64,8 +66,58 @@ Deno.serve(async (req) => {
         rpcArgs.p_action = "reject"; rpcArgs.p_rejection_reason = reason;
       }
       if (action === "withdrawal_complete") {
-        const txHash = typeof body.tx_hash === "string" ? body.tx_hash.trim() : "";
-        if (!/^[a-f0-9]{64}$/i.test(txHash)) return json({ error: "Invalid TRON transaction hash" }, 400);
+        const txHash = typeof body.tx_hash === "string" ? body.tx_hash.trim().toLowerCase() : "";
+        if (!/^[a-f0-9]{64}$/.test(txHash)) return json({ error: "Invalid TRON transaction hash" }, 400);
+        const gridKey = Deno.env.get("TRONGRID_API_KEY");
+        const tokenContract = Deno.env.get("NEXORA_USDT_CONTRACT");
+        const minConfirmations = Number(Deno.env.get("NEXORA_WITHDRAWAL_CONFIRMATIONS") ?? "");
+        const tronGridBase = (Deno.env.get("TRONGRID_BASE_URL") ?? "https://api.trongrid.io").replace(/\\/+$/, "");
+        if (!gridKey || !tokenContract || !Number.isSafeInteger(minConfirmations) || minConfirmations < 1) {
+          return json({ error: "Withdrawal chain verification is not configured; request remains in processing." }, 503);
+        }
+        try { await tronAddressToHex(tokenContract); } catch {
+          return json({ error: "Configured USDT contract address is invalid." }, 503);
+        }
+        const rows = await query("nx_withdrawals",
+          "select=id,asset_code,network_code,amount,fee_amount,status,destination_address&id=eq." + encodeURIComponent(withdrawalId) + "&limit=1");
+        const withdrawal = rows[0];
+        if (!withdrawal) return json({ error: "Withdrawal not found" }, 404);
+        if (withdrawal.status !== "processing") return json({ error: "Withdrawal must be approved and processing before payout verification." }, 409);
+        if (withdrawal.asset_code !== "USDT" || withdrawal.network_code !== "TRON-TRC20") return json({ error: "Unsupported withdrawal asset or network." }, 409);
+        const amount = String(withdrawal.amount);
+        if (!withdrawalAmountToBaseUnits(amount)) return json({ error: "Requested payout amount must use no more than six USDT decimal places." }, 409);
+        let verified;
+        try {
+          verified = await verifyWithdrawalTransfer({
+            transactionId: txHash,
+            tokenContractAddress: tokenContract,
+            recipientAddress: String(withdrawal.destination_address),
+            amount,
+            minimumConfirmations: minConfirmations,
+          }, { baseUrl: tronGridBase, apiKey: gridKey });
+        } catch {
+          return json({ error: "TRON verification service is unavailable or returned invalid evidence. Withdrawal remains in processing." }, 503);
+        }
+        if (!verified.ok) return json({ error: "Withdrawal was not completed: " + verified.reason + ". It remains in processing for manual review." }, 409);
+        const evidenceResponse = await fetch(`${url}/rest/v1/rpc/nx_record_withdrawal_evidence`, {
+          method: "POST", headers, body: JSON.stringify({
+            p_withdrawal_id: withdrawalId,
+            p_tx_hash: txHash,
+            p_event_index: verified.evidence.eventIndex,
+            p_token_contract_address: verified.evidence.contractAddress,
+            p_sender_address: verified.evidence.from,
+            p_recipient_address: verified.evidence.to,
+            p_amount_base_units: verified.amountBaseUnits,
+            p_block_number: verified.evidence.blockNumber,
+            p_confirmations: verified.evidence.confirmations,
+            p_receipt_result: verified.evidence.receiptResult,
+            p_verifier_version: "tron-solidified-withdrawal-v1",
+          }),
+        });
+        const evidenceResult = await evidenceResponse.json().catch(() => null);
+        if (!evidenceResponse.ok || !evidenceResult?.recorded) {
+          return json({ error: "Verified chain evidence could not be safely stored; withdrawal remains in processing." }, 409);
+        }
         rpcName = "nx_admin_complete_withdrawal"; rpcArgs.p_tx_hash = txHash;
       }
       const rpcResponse = await fetch(`${url}/rest/v1/rpc/${rpcName}`, {

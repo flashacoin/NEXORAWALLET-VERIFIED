@@ -42,13 +42,13 @@ Deno.serve(async (req) => {
   const max = Number(maxRaw);
   const feeBps = Number(feeBpsRaw);
   const fixedFee = Number(fixedFeeRaw);
-  if (!Number.isFinite(amount) || amount <= 0 || amount !== Math.round(amount * 1e8) / 1e8) return json({ error: "Amount must be a positive number with up to 8 decimal places" }, 400);
+  if (!Number.isFinite(amount) || amount <= 0 || amount !== Math.round(amount * 1e6) / 1e6) return json({ error: "Amount must be a positive number with up to 6 USDT decimal places" }, 400);
   if (amount < min || amount > max) return json({ error: `Withdrawal amount must be between ${min} and ${max} USDT` }, 400);
   if (network !== "TRON-TRC20") return json({ error: "Only USDT on TRON TRC20 is supported currently" }, 400);
   if (!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address)) return json({ error: "Invalid TRON address format" }, 400);
   if (key.length < 8 || key.length > 200) return json({ error: "A valid idempotency key is required" }, 400);
   if (![min,max,feeBps,fixedFee].every(Number.isFinite) || min <= 0 || max < min || feeBps < 0 || feeBps > 10000 || fixedFee < 0) return json({ error: "Withdrawal configuration invalid" }, 500);
-  const fee = Math.round((amount * feeBps / 10000 + fixedFee) * 1e8) / 1e8;
+  const fee = Math.round((amount * feeBps / 10000 + fixedFee) * 1e6) / 1e6;
   const headers = { apikey: service, Authorization: "Bearer " + service, "Content-Type": "application/json" };
   const rpc = await fetch(url + "/rest/v1/rpc/nx_request_withdrawal", { method: "POST", headers, body: JSON.stringify({
     p_user_id: user.id, p_amount: amount, p_fee: fee, p_network_code: network, p_destination_address: address, p_idempotency_key: key
@@ -59,5 +59,5 @@ Deno.serve(async (req) => {
     const status = /insufficient|balance/i.test(String(message)) ? 409 : 400;
     return json({ error: message }, status);
   }
-  return json({ success: true, withdrawal_id: result, amount, fee, total_reserved: Math.round((amount + fee) * 1e8) / 1e8, status: "requested", network_code: network });
+  return json({ success: true, withdrawal_id: result, amount, fee, total_reserved: Math.round((amount + fee) * 1e6) / 1e6, status: "requested", network_code: network });
 });
