@@ -155,17 +155,32 @@ Deno.serve(async (req) => {
       const wallets = ids.length ? await query("wallets", "select=id,user_id,asset_code,balance,updated_at&user_id=in.("+ids.map(encodeURIComponent).join(",")+")&order=asset_code.asc") : [];
       return json({ users, wallets, page, page_size: pageSize, has_more: hasMore });
     }
+    // Bounded, stable pagination for admin queues. Fetch one extra row to
+    // determine whether a next page exists without a separate count query.
+    const listPage = async (table: string) => {
+      const page = Number(body.page ?? 1);
+      const pageSize = Number(body.page_size ?? 50);
+      if (!Number.isInteger(page) || page < 1 || page > 10000) return { error: "Invalid page" };
+      if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 100) return { error: "Invalid page size" };
+      const fetched = await query(table,
+        "select=*&order=created_at.desc,id.desc&limit=" + (pageSize + 1) +
+        "&offset=" + ((page - 1) * pageSize));
+      return { rows: fetched.slice(0, pageSize), page, page_size: pageSize, has_more: fetched.length > pageSize };
+    };
     if (action === "deposits") {
-      const deposits = await query("nx_deposits", "select=*&order=created_at.desc&limit=200");
-      return json({ deposits });
+      const result = await listPage("nx_deposits");
+      if ("error" in result) return json({ error: result.error }, 400);
+      return json({ deposits: result.rows, page: result.page, page_size: result.page_size, has_more: result.has_more });
     }
     if (action === "deposit_submissions") {
-      const submissions = await query("nx_deposit_submissions", "select=*&order=created_at.desc&limit=200");
-      return json({ submissions });
+      const result = await listPage("nx_deposit_submissions");
+      if ("error" in result) return json({ error: result.error }, 400);
+      return json({ submissions: result.rows, page: result.page, page_size: result.page_size, has_more: result.has_more });
     }
     if (action === "withdrawals") {
-      const withdrawals = await query("nx_withdrawals", "select=*&order=created_at.desc&limit=200");
-      return json({ withdrawals });
+      const result = await listPage("nx_withdrawals");
+      if ("error" in result) return json({ error: result.error }, 400);
+      return json({ withdrawals: result.rows, page: result.page, page_size: result.page_size, has_more: result.has_more });
     }
     if (action === "settings") {
       const settings = await query("nx_wallet_settings", "select=setting_key,setting_value,updated_by,updated_at&order=setting_key.asc");
@@ -190,8 +205,14 @@ Deno.serve(async (req) => {
       return json({ ledger, page, page_size: pageSize, has_more: hasMore });
     }
     if (action === "audit") {
-      const audit = await query("nx_admin_audit_logs", "select=id,admin_user_id,action,target_type,target_id,before_data,after_data,created_at&order=created_at.desc&limit=200");
-      return json({ audit });
+      const page = Number(body.page ?? 1);
+      const pageSize = Number(body.page_size ?? 50);
+      if (!Number.isInteger(page) || page < 1 || page > 10000) return json({ error: "Invalid page" }, 400);
+      if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 100) return json({ error: "Invalid page size" }, 400);
+      const fetched = await query("nx_admin_audit_logs",
+        "select=id,admin_user_id,action,target_type,target_id,before_data,after_data,created_at&order=created_at.desc,id.desc&limit=" +
+        (pageSize + 1) + "&offset=" + ((page - 1) * pageSize));
+      return json({ audit: fetched.slice(0, pageSize), page, page_size: pageSize, has_more: fetched.length > pageSize });
     }
     return json({ error: "Unknown action" }, 400);
   } catch {
