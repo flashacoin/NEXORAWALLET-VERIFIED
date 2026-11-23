@@ -12,10 +12,14 @@ function constantTimeEqual(a: string, b: string): boolean {
 }
 
 async function hmac(keyBytes: Uint8Array, message: string): Promise<Uint8Array> {
+  // Copy into a definite ArrayBuffer for the Web Crypto BufferSource types in Deno 2.
+  const keyData = new ArrayBuffer(keyBytes.byteLength);
+  new Uint8Array(keyData).set(keyBytes);
+  const messageData = encoder.encode(message);
   const key = await crypto.subtle.importKey(
-    "raw", keyBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+    "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
   );
-  return new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(message)));
+  return new Uint8Array(await crypto.subtle.sign("HMAC", key, messageData));
 }
 
 export type TelegramWebAppUser = {
