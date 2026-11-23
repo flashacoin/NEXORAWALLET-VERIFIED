@@ -30,6 +30,18 @@ insert into public.wallets(id,user_id,asset_code,balance) values
 \i v2/supabase/migrations/008_deposit_submission_queue.sql
 \i v2/supabase/migrations/013_deposit_verification_evidence.sql
 
+-- Simulate a legacy row with precision beyond six decimals before the new guard.
+insert into public.nx_deposit_submissions(user_id,asset_code,network_code,amount,tx_hash,status)
+values ('10000000-0000-0000-0000-000000000301','USDT','TRON-TRC20',0.00000001,repeat('e',64),'submitted');
+\i v2/supabase/migrations/014_usdt_deposit_six_decimal_precision.sql
+
+DO $$
+begin
+  if not exists (select 1 from public.nx_deposit_submissions where tx_hash=repeat('e',64) and amount=0.00000001) then
+    raise exception 'FAIL: legacy submission was modified or removed';
+  end if;
+end $$;
+
 select set_config('request.jwt.claim.role','service_role',true);
 
 do $$
@@ -120,6 +132,22 @@ begin
     raise exception 'FAIL: duplicate transaction hash was accepted';
   exception when others then
     if sqlerrm <> 'transaction hash already submitted' then raise; end if;
+  end;
+
+  -- Six decimal places are accepted; precision beyond six is rejected.
+  if public.nx_submit_deposit(
+    '10000000-0000-0000-0000-000000000301',
+    1.123456,'TRON-TRC20',repeat('f',64)
+  ) is null then raise exception 'FAIL: valid six-decimal amount was rejected'; end if;
+
+  begin
+    perform public.nx_submit_deposit(
+      '10000000-0000-0000-0000-000000000301',
+      1.1234567,'TRON-TRC20',repeat('a',64)
+    );
+    raise exception 'FAIL: amount with seven decimal places was accepted';
+  exception when others then
+    if sqlerrm <> 'invalid amount' then raise; end if;
   end;
 
   begin
