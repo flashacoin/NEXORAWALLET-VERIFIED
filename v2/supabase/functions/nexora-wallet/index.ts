@@ -77,11 +77,13 @@ Deno.serve(async (req) => {
         return json({ error: "Invalid history page size" }, 400);
       }
       const offset = (page - 1) * pageSize;
-      const ledger = await rest(
+      const fetched = await rest(
         "nx_wallet_ledger",
-        `select=id,asset_code,amount,entry_type,reference_type,created_at&user_id=eq.${userId}&order=created_at.desc,id.desc&limit=${pageSize}&offset=${offset}`,
+        `select=id,asset_code,amount,entry_type,reference_type,created_at&user_id=eq.${userId}&order=created_at.desc,id.desc&limit=${pageSize + 1}&offset=${offset}`,
       );
-      return json({ ledger, page, page_size: pageSize, has_more: ledger.length === pageSize });
+      const hasMore = fetched.length > pageSize;
+      const ledger = fetched.slice(0, pageSize);
+      return json({ ledger, page, page_size: pageSize, has_more: hasMore });
     }
     if (action === "deposits") {
       const deposits = await rest("nx_deposits", `select=id,asset_code,network_code,amount,confirmations,required_confirmations,status,tx_hash,created_at&user_id=eq.${userId}&order=created_at.desc&limit=100`);
