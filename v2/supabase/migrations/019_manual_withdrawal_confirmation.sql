@@ -1,4 +1,4 @@
--- NEXORA V2: explicitly manual payout confirmation. No blockchain provider is called.
+-- NEXORA V2: manual confirmation of a payout sent outside the platform. No blockchain provider is called.
 alter table public.nx_withdrawals
   add column if not exists payout_proof_path text;
 
