@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
   const adminIds = adminIdsRaw.split(",").map((v) => v.trim()).filter(Boolean);
   if (!adminIds.includes(userId)) return json({ error: "Administrator access required" }, 403);
 
-  let body: { action?: string; withdrawal_id?: string; reason?: string; tx_hash?: string; payout_proof_path?: string; review_action?: string; page?: number; page_size?: number; search?: string };
+  let body: { action?: string; withdrawal_id?: string; submission_id?: string; decision?: string; admin_note?: string; reason?: string; tx_hash?: string; payout_proof_path?: string; review_action?: string; page?: number; page_size?: number; search?: string };
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
   const action = body.action;
 
@@ -57,6 +57,22 @@ Deno.serve(async (req) => {
   };
 
   try {
+    if (action === "deposit_manual_review") {
+      const submissionId = typeof body.submission_id === "string" ? body.submission_id.trim() : "";
+      const decision = typeof body.decision === "string" ? body.decision.trim() : "";
+      const note = typeof body.admin_note === "string" ? body.admin_note.trim() : null;
+      if (!/^[0-9a-f-]{36}$/i.test(submissionId)) return json({ error: "Invalid deposit submission ID" }, 400);
+      if (!["approve","reject"].includes(decision)) return json({ error: "Decision must be approve or reject" }, 400);
+      if (note !== null && note.length > 500) return json({ error: "Admin note is too long" }, 400);
+      const review = await fetch(`${url}/rest/v1/rpc/nx_admin_review_manual_deposit`, {
+        method: "POST", headers,
+        body: JSON.stringify({ p_submission_id: submissionId, p_admin_user_id: userId, p_action: decision, p_admin_note: note }),
+        signal: AbortSignal.timeout(15000),
+      });
+      const result = await review.json().catch(() => null);
+      if (!review.ok) return json({ error: typeof result === "string" ? result : (result?.message ?? "Manual deposit review failed") }, 409);
+      return json(result);
+    }
     // Withdrawal state transitions: service-role RPCs only, admin identity comes from verified JWT.
     if (["withdrawal_approve","withdrawal_reject","withdrawal_complete"].includes(action ?? "")) {
       const withdrawalId = typeof body.withdrawal_id === "string" ? body.withdrawal_id.trim() : "";
