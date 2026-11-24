@@ -13,14 +13,15 @@ Deno.serve(async(req)=>{
  if(!auth.ok) return json({error:"Invalid or expired session"},401);
  const user=await auth.json().catch(()=>null); if(!user?.id) return json({error:"Invalid user"},401);
  let body:any; try{body=await req.json()}catch{return json({error:"Invalid JSON"},400)}
- const amount=Number(body?.amount), network=body?.network_code??"TRON-TRC20", hash=typeof body?.tx_hash==="string"?body.tx_hash.trim():"";
+ const amount=Number(body?.amount), network=body?.network_code??"TRON-TRC20", hash=typeof body?.tx_hash==="string"?body.tx_hash.trim():"", proofPath=typeof body?.proof_path==="string"?body.proof_path.trim():"";
  if(!Number.isFinite(amount)||amount<=0||amount!==Math.round(amount*1e6)/1e6) return json({error:"Amount must be positive with up to 6 USDT decimals"},400);
  if(network!=="TRON-TRC20") return json({error:"Unsupported network"},400);
- if(!/^[A-Fa-f0-9]{64}$/.test(hash)) return json({error:"Invalid transaction hash format"},400);
+ if(hash.length<6||hash.length>200) return json({error:"Enter a valid transaction reference"},400);
+ if(!/^deposit-proofs\/[0-9a-f-]{36}\/[A-Za-z0-9_.-]+$/.test(proofPath)) return json({error:"Upload your payment screenshot before submitting"},400);
  const headers={apikey:service,Authorization:"Bearer "+service,"Content-Type":"application/json"};
  let response:Response;
- try{response=await fetch(url+"/rest/v1/rpc/nx_submit_deposit",{method:"POST",headers,body:JSON.stringify({p_user_id:user.id,p_amount:amount,p_network_code:network,p_tx_hash:hash}),signal:AbortSignal.timeout(15000)})}catch{return json({error:"Deposit service unavailable or timed out. Check submission status before retrying."},503)}
+ try{response=await fetch(url+"/rest/v1/rpc/nx_submit_deposit",{method:"POST",headers,body:JSON.stringify({p_user_id:user.id,p_amount:amount,p_network_code:network,p_tx_hash:hash,p_proof_path:proofPath}),signal:AbortSignal.timeout(15000)})}catch{return json({error:"Deposit service unavailable or timed out. Check submission status before retrying."},503)}
  const data=await response.json().catch(()=>null);
  if(!response.ok) return json({error:typeof data==="string"?data:(data?.message??"Deposit submission failed")},409);
- return json({success:true,submission_id:data,status:"submitted",notice:"Submitted for verification. Your wallet has not been credited."});
+ return json({success:true,submission_id:data,status:"submitted",notice:"Submitted for manual admin review. Your wallet has not been credited."});
 });
