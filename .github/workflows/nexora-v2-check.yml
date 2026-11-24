@@ -26,6 +26,7 @@ jobs:
           deno check v2/supabase/functions/nexora-admin/index.ts
           deno check v2/supabase/functions/nexora-deposit-submit/index.ts
           deno check v2/supabase/functions/nexora-withdrawal-submit/index.ts
+          deno check v2/supabase/functions/nexora-deposit-address/index.ts
           deno check v2/supabase/functions/nexora-admin/nexora-withdrawal-verifier.ts
           deno test v2/supabase/functions/nexora-admin/nexora-withdrawal-verifier_test.ts
           deno check v2/supabase/functions/nexora-deposit-settle/index.ts
@@ -100,6 +101,13 @@ jobs:
                   "manual payout",
                   "p_payout_proof_path",
                   "nx_admin_complete_withdrawal",
+              ],
+              "v2/supabase/functions/nexora-deposit-address/index.ts": [
+                  "NEXORA_ADMIN_USER_IDS",
+                  'body.action === "assign"',
+                  'body.action === "my_address"',
+                  "manual_deposit_address_assigned",
+                  "nx_deposit_addresses",
               ],
               "v2/supabase/functions/nexora-deposit-submit/index.ts": [
                   "tx_hash",
